@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+branch="$(git symbolic-ref --quiet --short HEAD || true)"
+case "$branch" in
+  main|master|'')
+    echo "WeDraft: 请在 codex/<type>/<topic> 任务分支提交，经本地审阅后合并。" >&2
+    exit 1
+    ;;
+esac
+# Preserve existing source files that end with a blank line.
+git -c core.whitespace=-blank-at-eof diff --cached --check
+node scripts/check-repository.mjs --staged

@@ -1,0 +1,175 @@
+{
+  "id": "default-business",
+  "name": "小哈公社",
+  "body": {
+    "font-size": "15px",
+    "line-height": "1.75",
+    "color": "#000000",
+    "letter-spacing": "0.5px",
+    "text-align": "justify",
+    "margin": "0 8px 24px"
+  },
+  "heading2": {
+    "font-size": "15px",
+    "line-height": "1.75",
+    "font-weight": "700",
+    "color": "#FFA900",
+    "letter-spacing": "0.5px",
+    "text-align": "justify",
+    "margin": "0 8px 24px"
+  },
+  "heading3": {
+    "font-size": "15px",
+    "line-height": "1.75",
+    "font-weight": "700",
+    "color": "#000000",
+    "letter-spacing": "0.5px",
+    "text-align": "justify",
+    "margin": "32px 8px 24px"
+  },
+  "quote": {
+    "font-size": "15px",
+    "line-height": "1.75",
+    "color": "#555555",
+    "background": "#FFF8EE",
+    "border-left": "3px solid #F96E57",
+    "padding": "14px 16px",
+    "margin": "26px 8px"
+  },
+  "image": {
+    "display": "block",
+    "width": "calc(100% - 16px)",
+    "height": "auto",
+    "margin": "28px 8px 7px"
+  },
+  "link": {
+    "color": "#576B95",
+    "text-decoration": "none"
+  },
+  "divider": {
+    "border": "0",
+    "border-top": "1px solid #F0DED5",
+    "margin": "40px auto 18px",
+    "width": "36%"
+  },
+  "strong": {
+    "color": "#000000",
+    "font-weight": "700"
+  },
+  "list": {
+    "padding-left": "1.5em",
+    "margin": "20px 8px 24px"
+  },
+  "listItem": {
+    "font-size": "15px",
+    "line-height": "1.75",
+    "color": "#000000",
+    "letter-spacing": "0.5px",
+    "text-align": "justify",
+    "margin": "0 0 8px"
+  },
+  "caption": {
+    "font-size": "11px",
+    "line-height": "1.6",
+    "color": "#999999",
+    "text-align": "right",
+    "margin": "0 8px 24px"
+  },
+  "note": {
+    "font-size": "13px",
+    "line-height": "1.7",
+    "color": "#777777",
+    "letter-spacing": "0.2px",
+    "text-align": "left",
+    "margin": "12px 8px 22px"
+  },
+  "code": {
+    "font-size": "13px",
+    "line-height": "1.7",
+    "color": "#363636",
+    "background": "#F6F6F4",
+    "border-left": "3px solid #D8D4CC",
+    "padding": "15px 16px",
+    "margin": "25px 8px",
+    "white-space": "pre-wrap",
+    "word-break": "break-word",
+    "font-family": "Menlo,Consolas,monospace"
+  },
+  "references": {
+    "background": "#FFF8EE",
+    "border-left": "3px solid #F96E57",
+    "padding": "18px 17px 12px",
+    "margin": "0 8px 24px"
+  },
+  "referenceTitle": {
+    "font-size": "15px",
+    "line-height": "1.6",
+    "font-weight": "700",
+    "color": "#E98A16",
+    "letter-spacing": "0.8px",
+    "margin": "0 0 12px"
+  },
+  "referenceItem": {
+    "font-size": "12px",
+    "line-height": "1.75",
+    "color": "#77706A",
+    "letter-spacing": "0.2px",
+    "margin": "0 0 8px"
+  },
+  "tableWrapper": {
+    "background": "#FFFDF9",
+    "border": "1px solid #F0DED5",
+    "border-top": "3px solid #F36C21",
+    "border-radius": "10px",
+    "padding": "3px",
+    "margin": "28px 8px 30px",
+    "overflow": "hidden"
+  },
+  "table": {
+    "display": "table",
+    "width": "100%",
+    "table-layout": "fixed",
+    "border-collapse": "separate",
+    "border-spacing": "0",
+    "font-family": "PingFang SC,system-ui,sans-serif"
+  },
+  "tableHeaderCell": {
+    "font-size": "13px",
+    "line-height": "1.55",
+    "font-weight": "700",
+    "color": "#94452F",
+    "background": "#FFF0E4",
+    "padding": "10px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #EBCDBE",
+    "border-right": "1px solid #EBCDBE",
+    "overflow-wrap": "anywhere"
+  },
+  "tableCell": {
+    "font-size": "13px",
+    "line-height": "1.65",
+    "font-weight": "400",
+    "color": "#35302D",
+    "background": "#FFFFFF",
+    "padding": "10px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #F1E5DE",
+    "border-right": "1px solid #F1E5DE",
+    "overflow-wrap": "anywhere"
+  },
+  "tableAltCell": {
+    "font-size": "13px",
+    "line-height": "1.65",
+    "font-weight": "400",
+    "color": "#35302D",
+    "background": "#FFFAF6",
+    "padding": "10px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #F1E5DE",
+    "border-right": "1px solid #F1E5DE",
+    "overflow-wrap": "anywhere"
+  }
+}

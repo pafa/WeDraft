@@ -1,0 +1,36 @@
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+dist/
+target/
+.DS_Store
+*.log
+release/
+
+# Local package cache
+/.pnpm-store/
+
+# Generated Tauri schemas and local build/review artifacts
+/apps/desktop/src-tauri/gen/
+/artifacts/
+/output/
+/.worktrees/
+/.codex/
+/.agents/
+
+# Private app data, exports and signing credentials
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.dmg
+*.app/
+*.p12
+*.p8
+*.key
+*.pem
+*.mobileprovision
+/local-data/
+/backups/

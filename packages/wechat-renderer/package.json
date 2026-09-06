@@ -1,0 +1,23 @@
+{
+  "name": "@wedraft/wechat-renderer",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wedraft/shared-types": "workspace:*",
+    "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "@types/sanitize-html": "^2.16.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
