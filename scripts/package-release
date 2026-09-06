@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+: "${EXPECTED_SHA:?Set EXPECTED_SHA to the full approved main commit SHA}"
+[[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+[[ "$(git rev-parse HEAD)" == "$EXPECTED_SHA" ]]
+[[ "$(git rev-parse origin/main)" == "$EXPECTED_SHA" ]]
+[[ -z "$(git status --porcelain)" ]] || { echo "工作区必须干净。" >&2; exit 1; }
+node scripts/check-repository.mjs
+version="$(node -p 'JSON.parse(require("fs").readFileSync("package.json", "utf8")).version')"
+target_dir="${CARGO_TARGET_DIR:-apps/desktop/src-tauri/target}"
+bundle="$target_dir/aarch64-apple-darwin/release/bundle"
+app="$bundle/macos/WeDraft.app"
+[[ -d "$app" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" == "$version" ]]
+executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
+[[ "$(lipo -archs "$app/Contents/MacOS/$executable")" == arm64 ]]
+codesign --verify --deep --strict "$app"
+shopt -s nullglob
+dmgs=("$bundle/dmg/"*.dmg)
+[[ ${#dmgs[@]} == 1 ]] || { echo "必须存在且仅存在一个 DMG。" >&2; exit 1; }
+# Never mix files from two builds or overwrite an existing candidate.
+mkdir -p artifacts
+mkdir artifacts/release
+cp "${dmgs[0]}" "artifacts/release/WeDraft_${version}_aarch64.dmg"
+ditto -c -k --sequesterRsrc --keepParent "$app" "artifacts/release/WeDraft_${version}_aarch64.app.zip"
+VERSION="$version" node --input-type=module <<'JS'
+import { writeFileSync } from 'node:fs';
+const record = {
+  product: 'WeDraft', version: process.env.VERSION, sourceCommit: process.env.EXPECTED_SHA,
+  architecture: 'aarch64-apple-darwin', builtAt: new Date().toISOString(),
+  signing: 'ad-hoc', notarized: false,
+  workflowRun: process.env.GITHUB_RUN_ID ?? null,
+};
+writeFileSync('artifacts/release/build-info.json', JSON.stringify(record, null, 2) + '\n');
+JS
+(cd artifacts/release && shasum -a 256 *.dmg *.zip build-info.json > SHA256SUMS)
+echo "候选已写入 artifacts/release；尚未创建标签或发布。"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      echo "WeDraft: 禁止直接推送主干；请通过 GitHub PR 合并。" >&2
+      exit 1
+      ;;
+    refs/tags/*)
+      if [[ "$local_sha" =~ ^0+$ ]] || [[ ! "$remote_sha" =~ ^0+$ ]]; then
+        echo "WeDraft: 禁止删除或覆盖已有版本标签。" >&2
+        exit 1
+      fi
+      ;;
+  esac
+done

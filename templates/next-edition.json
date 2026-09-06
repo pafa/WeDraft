@@ -1,0 +1,178 @@
+{
+  "id": "next-edition",
+  "name": "小哈公社New",
+  "body": {
+    "font-size": "16px",
+    "line-height": "1.82",
+    "color": "#2B312F",
+    "letter-spacing": "0.35px",
+    "text-align": "justify",
+    "margin": "0 8px 22px"
+  },
+  "heading2": {
+    "font-size": "20px",
+    "line-height": "1.5",
+    "font-weight": "750",
+    "color": "#FFA900",
+    "letter-spacing": "0.2px",
+    "border-left": "3px solid #F96E57",
+    "padding-left": "13px",
+    "margin": "0 8px 24px"
+  },
+  "heading3": {
+    "font-size": "17px",
+    "line-height": "1.7",
+    "font-weight": "700",
+    "color": "#008DB9",
+    "letter-spacing": "0.25px",
+    "margin": "32px 8px 18px"
+  },
+  "quote": {
+    "font-size": "15px",
+    "line-height": "1.85",
+    "color": "#4D5B56",
+    "background": "#F2F6F4",
+    "border-left": "3px solid #A8BEB7",
+    "padding": "17px 18px",
+    "margin": "27px 8px"
+  },
+  "image": {
+    "display": "block",
+    "width": "calc(100% - 16px)",
+    "height": "auto",
+    "margin": "30px 8px 7px"
+  },
+  "link": {
+    "color": "#3D688D",
+    "text-decoration": "none"
+  },
+  "divider": {
+    "border": "0",
+    "border-top": "1px solid #D8E0DD",
+    "margin": "42px auto 18px",
+    "width": "28%"
+  },
+  "strong": {
+    "color": "#185548",
+    "font-weight": "700"
+  },
+  "list": {
+    "padding-left": "1.45em",
+    "margin": "20px 8px 27px"
+  },
+  "listItem": {
+    "font-size": "16px",
+    "line-height": "1.8",
+    "color": "#2B312F",
+    "letter-spacing": "0.35px",
+    "text-align": "justify",
+    "margin": "0 0 10px"
+  },
+  "caption": {
+    "font-size": "11px",
+    "line-height": "1.7",
+    "color": "#929995",
+    "letter-spacing": "0.2px",
+    "text-align": "right",
+    "margin": "0 8px 27px"
+  },
+  "note": {
+    "font-size": "13px",
+    "line-height": "1.75",
+    "color": "#777F7B",
+    "letter-spacing": "0.2px",
+    "text-align": "left",
+    "border-left": "2px solid #D0DCD7",
+    "padding-left": "11px",
+    "margin": "14px 8px 24px"
+  },
+  "code": {
+    "font-size": "13px",
+    "line-height": "1.72",
+    "color": "#DCE9E4",
+    "background": "#20312C",
+    "border-left": "3px solid #67A08F",
+    "padding": "16px 17px",
+    "margin": "27px 8px",
+    "white-space": "pre-wrap",
+    "word-break": "break-word",
+    "font-family": "Menlo,Consolas,monospace"
+  },
+  "references": {
+    "border": "1px solid #D8E2DE",
+    "padding": "19px 18px 12px",
+    "margin": "0 8px 26px",
+    "background": "#F7F9F8"
+  },
+  "referenceTitle": {
+    "font-size": "12px",
+    "line-height": "1.6",
+    "font-weight": "750",
+    "color": "#3F7669",
+    "letter-spacing": "1.4px",
+    "margin": "0 0 14px"
+  },
+  "referenceItem": {
+    "font-size": "12px",
+    "line-height": "1.75",
+    "color": "#6F7975",
+    "letter-spacing": "0.2px",
+    "margin": "0 0 9px"
+  },
+  "tableWrapper": {
+    "background": "#F9FBFA",
+    "border": "1px solid #D5E3DE",
+    "border-top": "3px solid #008DB9",
+    "border-radius": "10px",
+    "padding": "3px",
+    "margin": "30px 8px 32px",
+    "overflow": "hidden"
+  },
+  "table": {
+    "display": "table",
+    "width": "100%",
+    "table-layout": "fixed",
+    "border-collapse": "separate",
+    "border-spacing": "0",
+    "font-family": "PingFang SC,system-ui,sans-serif"
+  },
+  "tableHeaderCell": {
+    "font-size": "13px",
+    "line-height": "1.6",
+    "font-weight": "700",
+    "color": "#185548",
+    "background": "#E8F3EF",
+    "padding": "11px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #C9DDD5",
+    "border-right": "1px solid #C9DDD5",
+    "overflow-wrap": "anywhere"
+  },
+  "tableCell": {
+    "font-size": "13px",
+    "line-height": "1.7",
+    "font-weight": "400",
+    "color": "#2B312F",
+    "background": "#FFFFFF",
+    "padding": "11px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #E1EAE6",
+    "border-right": "1px solid #E1EAE6",
+    "overflow-wrap": "anywhere"
+  },
+  "tableAltCell": {
+    "font-size": "13px",
+    "line-height": "1.7",
+    "font-weight": "400",
+    "color": "#2B312F",
+    "background": "#F3F8F6",
+    "padding": "11px 8px",
+    "text-align": "left",
+    "vertical-align": "middle",
+    "border-bottom": "1px solid #E1EAE6",
+    "border-right": "1px solid #E1EAE6",
+    "overflow-wrap": "anywhere"
+  }
+}
