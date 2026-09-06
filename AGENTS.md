@@ -20,6 +20,7 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 ## Local Git and release rules
 
 - Read `docs/git-workflow.md` before engineering or release work. Local Git is authoritative; `main` stores accepted versions. `https://github.com/pafa/WeDraft` is a private source backup only.
+- This checkout is the maintained project home. Start new work from current local `main`; after an approved merge and successful backup, leave this checkout on clean `main`. Archived setup/CI branches are historical references, not development baselines.
 - The owner's 2026-09-06 decision supersedes the earlier GitHub PR workflow: no mandatory GitHub PR, branch protection, Actions, Pro upgrade or additional workflow authorization. Do not recreate those as completion requirements.
 - Before edits, inspect cwd, Git root, branch, HEAD, remote and existing changes. Preserve unrelated work; stage only reviewed, named paths. Never use a blanket initial import to create a baseline.
 - All engineering changes, including prompts, dependencies, rules and hotfixes, use a short-lived `codex/<type>/<topic>` branch. Do not commit directly on `main` or `master` or bypass local hooks.
@@ -30,3 +31,10 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 - Releases come from a clean, approved local `main` commit, with matching app versions, `CHANGELOG.md`, an annotated `vX.Y.Z` tag, source SHA and local installer SHA-256 checksums. Creating a release tag, publishing or replacing the installed app requires specific authorization. Never move existing tags or replace release assets.
 - Keep installers and build records locally under ignored `release/` or `artifacts/`; GitHub backs up source branches and approved tags, not app data or installers. Preserve older packages for rollback; never roll back user data implicitly.
 - Private article history, cached user images, credentials, local exports and built installers stay out of Git. Source icons and the built-in sample image belong in Git. Do not add accounts, signing credentials or new remote services as part of this workflow.
+
+## Product documentation and repository page
+
+- Keep root `README.md` as the product landing page on GitHub's default `main` branch, with `docs/user-guide.md` for detailed usage. Update both when behavior, defaults or installation steps change; verify claims against current code and tests.
+- Use real screenshots with the built-in sample or explicitly approved content. Never include private article history or describe browser preview as proof of native clipboard, image caching or export behavior.
+- Keep application version/date aligned across existing version sources. Documentation-only maintenance does not change the app version or pretend to be a software release.
+- GitHub About, topics and README should describe the current private macOS product. Do not invent download links, public releases, cloud services, CI badges or license grants. Maintain the page when completing relevant changes; no scheduled monitoring or external publishing is implied.

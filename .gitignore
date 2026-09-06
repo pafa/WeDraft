@@ -16,6 +16,7 @@ release/
 /apps/desktop/src-tauri/gen/
 /artifacts/
 /output/
+/.playwright-cli/
 /.worktrees/
 /.codex/
 /.agents/
