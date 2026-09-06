@@ -17,15 +17,16 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 - Run `./scripts/verify` before claiming a code change is complete.
 - Run `pnpm build:mac` when Tauri configuration, Rust code, entitlements, icons, or packaging behavior changes.
 
-## Git, PR and release rules
+## Local Git and release rules
 
-- Read `docs/git-workflow.md` before engineering or release work. The private canonical repository is `https://github.com/pafa/WeDraft`; `main` is the integration branch.
+- Read `docs/git-workflow.md` before engineering or release work. Local Git is authoritative; `main` stores accepted versions. `https://github.com/pafa/WeDraft` is a private source backup only.
+- The owner's 2026-09-06 decision supersedes the earlier GitHub PR workflow: no mandatory GitHub PR, branch protection, Actions, Pro upgrade or additional workflow authorization. Do not recreate those as completion requirements.
 - Before edits, inspect cwd, Git root, branch, HEAD, remote and existing changes. Preserve unrelated work; stage only reviewed, named paths. Never use a blanket initial import to create a baseline.
-- All engineering changes, including prompts, dependencies, workflow rules and hotfixes, use a short-lived `codex/<type>/<topic>` branch and a PR to `main`. Never commit or push directly to `main` or `master`, force-push protected branches, bypass hooks/checks, or merge locally into `main`.
-- Run `./scripts/setup-git` in each new clone. Run `./scripts/verify` before handing off; native or packaging changes also require locked Rust tests and `pnpm build:mac`. GitHub CI checks every PR on Apple Silicon.
-- Review the complete diff and new files before committing. Create/update the PR with the exact candidate SHA, actual checks and limitations. Never claim a previous build verifies a newer candidate.
-- The owner must explicitly approve the repository, PR and current candidate before an agent merges with Squash. A changed candidate needs renewed approval. CI success, this workflow setup request, and approval to create a PR are not approval to merge or release.
-- Agents may prepare local builds and draft release material. Creating a release tag, publishing a release, replacing the installed app or changing data/signing credentials requires specific authorization. Never overwrite or move an existing release tag or asset.
-- Releases come only from a clean, approved `main` commit, with matching app versions, `CHANGELOG.md`, an annotated `vX.Y.Z` tag, source SHA and SHA-256 checksums. Retain the previous release for rollback; never roll back user data implicitly.
-- Private article history, cached user images, credentials, local exports and built installers stay out of Git. Source icons and the built-in sample image belong in Git.
-- GitHub currently returns HTTP 403 for private branch protection on this account. Local hooks are guardrails, not a server guarantee. Do not claim strict server enforcement until `./scripts/configure-github` and its readback succeed after the owner upgrades to Pro.
+- All engineering changes, including prompts, dependencies, rules and hotfixes, use a short-lived `codex/<type>/<topic>` branch. Do not commit directly on `main` or `master` or bypass local hooks.
+- Run `./scripts/setup-git` in each new clone and `./scripts/verify` before handoff. Native or packaging changes also require locked Rust tests and `pnpm build:mac`.
+- Review the complete local diff, including new files, and report the candidate SHA, actual checks and limitations. A local review replaces the former online PR requirement. Never claim a previous build verifies a newer candidate.
+- Obtain the owner's explicit approval of the current repository, branch and candidate before merging locally into `main`. A changed candidate needs renewed approval. Merge with `--no-ff` to preserve the task boundary; normal fast-forward backup pushes of local `main` are allowed. Never force-push or delete the backup main branch.
+- After each completed task, back up its committed task branch with `./scripts/backup`. After an approved merge, back up `main` the same way. Backing up a task branch is not approval to merge or release. Verify the remote SHA; do not claim uncommitted or unpushed work is backed up. Never use `git push --mirror` or push Codex internal refs.
+- Releases come from a clean, approved local `main` commit, with matching app versions, `CHANGELOG.md`, an annotated `vX.Y.Z` tag, source SHA and local installer SHA-256 checksums. Creating a release tag, publishing or replacing the installed app requires specific authorization. Never move existing tags or replace release assets.
+- Keep installers and build records locally under ignored `release/` or `artifacts/`; GitHub backs up source branches and approved tags, not app data or installers. Preserve older packages for rollback; never roll back user data implicitly.
+- Private article history, cached user images, credentials, local exports and built installers stay out of Git. Source icons and the built-in sample image belong in Git. Do not add accounts, signing credentials or new remote services as part of this workflow.

@@ -12,4 +12,4 @@ git config --local push.default simple
 git config --local fetch.prune true
 git config --local remote.pushDefault origin
 echo "已为当前仓库启用 Git 钩子、仅快进拉取和简单推送。"
-echo "钩子可以被绕过；服务器保护状态需另行核验。"
+echo "在本地完成审阅与版本管理；使用 ./scripts/backup 备份当前已提交分支。"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+branch="$(git symbolic-ref --quiet --short HEAD || true)"
+[[ -n "$branch" ]] || { echo "请先切换到要备份的分支。" >&2; exit 1; }
+[[ -z "$(git status --porcelain)" ]] || { echo "请先审查并提交工作区改动；未提交内容无法备份。" >&2; exit 1; }
+origin="$(git remote get-url --push origin)"
+case "$origin" in
+  https://github.com/pafa/WeDraft.git|https://github.com/pafa/WeDraft|git@github.com:pafa/WeDraft.git) ;;
+  *) echo "备份目标与 pafa/WeDraft 不匹配；停止。" >&2; exit 1 ;;
+esac
+git push --set-upstream origin "refs/heads/$branch:refs/heads/$branch"
+local_sha="$(git rev-parse HEAD)"
+remote_sha="$(git ls-remote --exit-code "$origin" "refs/heads/$branch" | cut -f1)"
+[[ "$local_sha" == "$remote_sha" ]] || { echo "远端与本地 SHA 不一致，备份尚未确认。" >&2; exit 1; }
+echo "备份已验证：${branch} ${local_sha}"

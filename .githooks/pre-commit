@@ -3,7 +3,7 @@ set -euo pipefail
 branch="$(git symbolic-ref --quiet --short HEAD || true)"
 case "$branch" in
   main|master|'')
-    echo "WeDraft: 请在 codex/<type>/<topic> 任务分支提交，再创建 PR。" >&2
+    echo "WeDraft: 请在 codex/<type>/<topic> 任务分支提交，经本地审阅后合并。" >&2
     exit 1
     ;;
 esac

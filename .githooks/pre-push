@@ -3,8 +3,18 @@ set -euo pipefail
 while read -r local_ref local_sha remote_ref remote_sha; do
   case "$remote_ref" in
     refs/heads/main|refs/heads/master)
-      echo "WeDraft: 禁止直接推送主干；请通过 GitHub PR 合并。" >&2
-      exit 1
+      if [[ "$local_sha" =~ ^0+$ ]]; then
+        echo "WeDraft: 禁止删除备份主干。" >&2
+        exit 1
+      fi
+      if [[ "$local_ref" != "$remote_ref" ]]; then
+        echo "WeDraft: 请先在本地审阅并合并，再备份同名主干。" >&2
+        exit 1
+      fi
+      if [[ ! "$remote_sha" =~ ^0+$ ]] && ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+        echo "WeDraft: 备份主干只允许快进；请先 fetch 并检查差异，禁止强推。" >&2
+        exit 1
+      fi
       ;;
     refs/tags/*)
       if [[ "$local_sha" =~ ^0+$ ]] || [[ ! "$remote_sha" =~ ^0+$ ]]; then

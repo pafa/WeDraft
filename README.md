@@ -91,13 +91,13 @@ pnpm build:mac
 
 ## 项目与版本管理
 
-唯一主仓库：[pafa/WeDraft](https://github.com/pafa/WeDraft)（私有）。所有更新都通过任务分支和 PR 进入 `main`，合并和发布分别由维护者批准。
+本地 Git 负责开发、审阅、合并和版本管理；[pafa/WeDraft](https://github.com/pafa/WeDraft)（私有）只保存源码备份。所有更新在任务分支完成，经本地检查与维护者批准后合入本地 `main`，再推送备份。
 
-- [本地、GitHub、PR 与发布规则](docs/git-workflow.md)
+- [本地 Git、备份与发布规则](docs/git-workflow.md)
 - [版本记录](CHANGELOG.md)
 - [软件验收清单](docs/acceptance-tests.md)
 
-当前 GitHub 套餐尚不支持私有分支保护；本地钩子及 CI 已纳入配置，服务器强制保护需升级 Pro 后运行 `./scripts/configure-github` 并核验。不要把流程约定等同于服务器拦截。
+不要求 GitHub PR、强制分支保护或线上 CI，也不需要升级 Pro 或增加 workflow 权限。每次完成工作后执行 `./scripts/backup`，提交过的当前分支会上传并核对远端 SHA；未提交的改动、文章数据和安装包不在源码备份范围内。
 
 ## 快捷键
 
