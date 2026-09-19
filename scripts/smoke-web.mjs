@@ -386,12 +386,32 @@ try {
     await page.setViewportSize({ width, height: 900 });
     await page.getByRole("button", { name: "编辑原稿", exact: true }).isVisible().then(async visible => { if (visible) await page.getByRole("button", { name: "编辑原稿", exact: true }).click(); });
     const bar = page.locator(".markdown-shortcut-bar");
-    const geometry = await bar.evaluate(element => {
+    const readGeometry = () => bar.evaluate(element => {
       const bounds = element.getBoundingClientRect();
       const list = element;
       const rows = new Set([...element.querySelectorAll("button")].map(button => Math.round(button.getBoundingClientRect().top))).size;
-      return { rows, iconOnly: element.dataset.iconOnly === "true", fits: [...element.querySelectorAll("button")].every(button => { const r = button.getBoundingClientRect(); return r.left >= bounds.left && r.right <= bounds.right + 1 && r.top >= bounds.top && r.bottom <= bounds.bottom + 1; }), overflow: getComputedStyle(list).overflowX, scroll: list.scrollWidth > list.clientWidth + 1 };
+      return { width: bounds.width, height: bounds.height, fontsReady: document.fonts.status === "loaded", rows, iconOnly: element.dataset.iconOnly === "true", fits: [...element.querySelectorAll("button")].every(button => { const r = button.getBoundingClientRect(); return r.left >= bounds.left && r.right <= bounds.right + 1 && r.top >= bounds.top && r.bottom <= bounds.bottom + 1; }), overflow: getComputedStyle(list).overflowX, scroll: list.scrollWidth > list.clientWidth + 1 };
     });
+    // ResizeObserver and font readiness update the compact layout after resize.
+    // Require two matching, valid samples within the existing bounded poll; a
+    // persistent overflow or third row still fails instead of passing on retry.
+    let geometry;
+    let previousGeometry;
+    try {
+      await waitFor(async () => {
+        geometry = await readGeometry();
+        const signature = JSON.stringify(geometry);
+        const settled = geometry.fontsReady && geometry.fits && !geometry.scroll
+          && geometry.overflow !== "auto" && geometry.overflow !== "scroll"
+          && geometry.rows > 0 && geometry.rows <= 2
+          && (geometry.iconOnly || geometry.rows === 1)
+          && signature === previousGeometry;
+        previousGeometry = signature;
+        return settled;
+      });
+    } catch (error) {
+      throw new Error(`Toolbar did not settle at ${width}px: ${JSON.stringify(geometry)}`, { cause: error });
+    }
     assert(geometry.fits, `all toolbar actions fit at ${width}px`);
     assert(!geometry.scroll && geometry.overflow !== "auto" && geometry.overflow !== "scroll");
     assert.equal(await bar.locator("button").count(), 15);
