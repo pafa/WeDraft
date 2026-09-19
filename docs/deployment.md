@@ -4,6 +4,10 @@
 
 首发范围是网页、七款内置模板、CLI、本地 MCP 与 Skill。Mac 仍保留 1.1.2 基线，不包含本次重新打包、签名或公证。
 
+## 版本一致性
+
+`apps/web`、`packages/cli`、`packages/mcp`、`packages/core` 的 package 版本和 `ENGINE_VERSION` 共同标识 Web/AI 工具集，由仓库检查同时校验工作区与暂存候选。Mac 和其他内部包保持独立版本。本次整理不升版本；下一次 Web/AI 补丁发布准备时一起递增上述五处，并更新 CHANGELOG，再从批准的 main 构建候选。
+
 ## 本地发布候选
 
 在同一任务分支完成修改、`./scripts/verify` 与相关浏览器验收，审阅并提交。然后在干净工作区运行：
@@ -78,6 +82,8 @@ curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'http
 ```sh
 node scripts/check-web-deployment.mjs artifacts/web-release/<版本>-<提交> https://wedraft.xiaoha.org artifacts/web-release/<版本>-<提交>/production-assets.json
 ```
+
+每次请求默认允许 180 秒（含响应体下载），第四个参数可指定 1–900 秒；不自动重试。
 
 脚本校验每个资源的字节数、SHA-256、关键 MIME、缓存策略、根页面内容和缺失文件 404；报告不覆盖已有文件。仅本地回归允许 loopback HTTP，公网必须 HTTPS。报告中的源码 SHA 来自候选 `release.json`，线上该文件也必须通过哈希比对。检查失败应保留记录并排查，不绕过 TLS 校验。
 

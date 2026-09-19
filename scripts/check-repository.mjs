@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { checkWebVersions } from "./check-web-versions.mjs";
 
 const staged = process.argv.includes("--staged");
 const git = (...args) => execFileSync("git", args, { encoding: "utf8" });
@@ -35,8 +36,10 @@ if (!read("CHANGELOG.md").includes(`## [${version}]`)) errors.push("CHANGELOG �
 const updated = read("apps/desktop/src/version.ts").match(/APP_UPDATED_AT = "([^"]+)"/)?.[1];
 if (!updated || !read("README.md").includes(`更新日期：\`${updated}\``)) errors.push("界面和 README 更新日期不一致。");
 if (!root.packageManager?.startsWith("pnpm@")) errors.push("必须固定 pnpm 版本。");
+const web = checkWebVersions(read);
+errors.push(...web.errors);
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Repository checks passed (${staged ? "index" : "working tree"}, app ${version}).`);
+console.log(`Repository checks passed (${staged ? "index" : "working tree"}, app ${version}, Web/AI ${web.version}).`);
