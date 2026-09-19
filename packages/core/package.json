@@ -11,7 +11,7 @@
     "@wedraft/shared-types": "workspace:*",
     "@wedraft/validation": "workspace:*",
     "@wedraft/wechat-renderer": "workspace:*",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
