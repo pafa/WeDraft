@@ -1,0 +1,22 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+/
+  Cache-Control: public, no-cache, no-transform
+/index.html
+  Cache-Control: public, no-cache, no-transform
+/release.json
+  Cache-Control: public, no-cache, no-transform
+/connect.md
+  Cache-Control: public, no-cache, no-transform
+  Content-Type: text/plain; charset=utf-8
+/integrations/*
+  Cache-Control: public, no-cache, no-transform
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable, no-transform
+/integrations/*.mjs
+  Content-Type: application/javascript; charset=utf-8
+/integrations/*.sh
+  Content-Type: text/plain; charset=utf-8
+/integrations/*.md
+  Content-Type: text/plain; charset=utf-8
