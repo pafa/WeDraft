@@ -14,6 +14,28 @@ WeDraft 是面向个人作者与编辑的本地排版应用。把 Markdown 或�
 
 **Apple Silicon macOS · 本地存储 · 两套排版模板 · 私有源码备份**
 
+## 网页与 AI 初版（开发候选）
+
+同一套排版核心现在提供独立网页、CLI 和本地 MCP，并附带配套 Skill。可在网页手工排版，也可让 AI 生成预览和 `.wedraft.zip` 文章包，再导入网页继续编辑。
+
+工具集开发版本为 `0.1.0`；上方 `1.1.2` 是现有 Mac 应用基线，本次没有发布或替换 Mac 安装包。仓库仍是私有源码备份，在线演示、公开仓库及 npm 包尚未发布。
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev:web
+# 另一个终端运行命令行或配置本地 MCP
+pnpm build:tools
+node packages/cli/dist/cli.mjs --help
+```
+
+网页和工具只需 Node / pnpm，不需要 Rust 或微信凭据。网页版在当前浏览器自动保存草稿，文章包包含原稿、模板和本地图片；不读取现有 Mac 数据库。
+
+[网页指南](docs/web-guide.md) · [AI / MCP / Skill 接入](docs/ai-integration.md) · [开源管理安排](docs/open-source-plan.md)
+
+![独立网页版：手工编辑、排版预览和文章包交接](docs/images/web-editor.png)
+
+*真实 Chrome 截图，使用中性内置样稿。下文介绍现有 Mac 版功能；网页与 Mac 的存储、图片限制和导出格式有所不同。*
+
 [使用指南](docs/user-guide.md) · [默认模板规范](docs/next-edition-guidelines.md) · [版本记录](CHANGELOG.md) · [开发与维护](docs/git-workflow.md)
 
 ![WeDraft 编辑与预览界面：左侧 Markdown，右侧小哈公社New 排版](docs/images/editor-overview.png)
@@ -69,7 +91,11 @@ pnpm dev
 | 命令 | 用途 |
 | --- | --- |
 | `pnpm dev` | 启动 Tauri 桌面开发环境。 |
-| `pnpm dev:web` | 查看浏览器中的编辑界面；不具备完整原生能力。 |
+| `pnpm dev:web` | 启动独立网页版，支持浏览器草稿、图片和可编辑文章包。 |
+| `pnpm dev:desktop-web` | 查看 Mac 前端的浏览器预览；不具备完整原生能力。 |
+| `pnpm build:web` | 构建可托管的静态网页到 `apps/web/dist`。 |
+| `pnpm build:tools` | 构建 CLI 与本地 stdio MCP。 |
+| `pnpm smoke:web` | 用本机 Chrome 验证 MCP → 网页 → 导出和剪贴板交接。 |
 | `./scripts/verify` | 检查版本、入库文件、类型、测试和前端构建。 |
 | `cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml` | 运行 Rust 原生测试。 |
 | `pnpm build:mac` | 构建 `aarch64-apple-darwin` 的 `.app` 与 `.dmg`，不构建 Intel 版本。 |

@@ -1,0 +1,7 @@
+{
+  "name":"@wedraft/mcp","version":"0.1.0","private":true,"type":"module",
+  "bin":{"wedraft-mcp":"dist/server.mjs"},"files":["dist"],
+  "scripts":{"build":"node ../../scripts/build-tools.mjs mcp","lint":"tsc --noEmit","typecheck":"tsc --noEmit","test":"vitest run"},
+  "dependencies":{"@modelcontextprotocol/sdk":"1.26.0","zod":"^4.4.3"},
+  "devDependencies":{"@wedraft/core":"workspace:*","@wedraft/cli":"workspace:*","typescript":"^5.9.3","vitest":"^3.2.7"}
+}

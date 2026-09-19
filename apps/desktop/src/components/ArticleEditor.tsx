@@ -182,6 +182,9 @@ export function ArticleEditor({
   onContentAnchorChange,
   onActiveBlockChange,
   onImagePreviewReady,
+  prepareImage,
+  persistenceHint = "复制后进入文章历史",
+  imageProcessingHint = "JPG / PNG / WEBP 会在本机自动检测并优化；GIF 保留动画。",
 }: {
   demoActive: boolean;
   demoMarkdown: string;
@@ -196,6 +199,9 @@ export function ArticleEditor({
   onContentAnchorChange: (anchor: ContentAnchor) => void;
   onActiveBlockChange: (blockIndex: number | null) => void;
   onImagePreviewReady: (localPath: string, dataUrl: string) => void;
+  prepareImage?: (file: File) => Promise<{ url: string; dataUrl: string; notice: string }>;
+  persistenceHint?: string;
+  imageProcessingHint?: string;
 }) {
   const {
     markdown,
@@ -485,6 +491,15 @@ export function ArticleEditor({
     setImageBusy(true);
     setImageError("");
     try {
+      if (prepareImage) {
+        const image = await prepareImage(file);
+        onImagePreviewReady(image.url, image.dataUrl);
+        insertAtCursor(buildBodyImageMarkdown(file.name, image.url, source));
+        setImageNotice({ message: image.notice, warning: false });
+        setPendingImage(null);
+        setImageSource("");
+        return;
+      }
       const bytes = new Uint8Array(await file.arrayBuffer());
       const cached = await cacheBodyImage(bytes, file.name);
       const metadata = new URLSearchParams({
@@ -618,7 +633,7 @@ export function ArticleEditor({
           <span className="eyebrow">PASTE & FORMAT</span>
           <h2>粘贴文章</h2>
         </div>
-        <span className="autosave-label">复制后进入文章历史</span>
+        <span className="autosave-label">{persistenceHint}</span>
       </div>
       <div className="editor-toolbar">
         <span>
@@ -893,7 +908,7 @@ export function ArticleEditor({
                 没有来源可以直接选择“无来源插入”。
               </p>
               <p className="image-file-meta">
-                {formatImageBytes(pendingImage.size)} · JPG / PNG / WEBP 会在本机自动检测并优化；GIF 保留动画。
+                {formatImageBytes(pendingImage.size)} · {imageProcessingHint}
               </p>
               <label className="image-source-field">
                 <span>图片来源</span>

@@ -1,0 +1,3 @@
+interface:
+  display_name: "WeDraft 文章排版"
+  short_description: "保留原文与图片来源，调用 WeDraft 生成预览和可继续编辑的文章包"
