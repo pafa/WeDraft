@@ -1,0 +1,140 @@
+/* Product UI only. Article templates and device typography own their styles. */
+.web-app {
+  --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ui-text-caption: 12px;
+  --ui-text-body: 14px;
+  --ui-text-title: 16px;
+  --ui-text-section: 20px;
+  --ui-text-page: 28px;
+  --ui-weight-regular: 400;
+  --ui-weight-action: 500;
+  --ui-weight-heading: 600;
+  --ui-leading-body: 1.7;
+  --ui-leading-heading: 1.4;
+  --ui-control-height: 36px;
+  --ui-primary-height: 40px;
+  --ui-compact-height: 32px;
+  --ui-control-radius: 8px;
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-body);
+  line-height: var(--ui-leading-body);
+}
+.web-app :where(button, input, select) { font-family: inherit; }
+.web-app .template-title,
+.web-app .page-heading h1 {
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-page);
+  font-weight: var(--ui-weight-heading);
+  line-height: var(--ui-leading-heading);
+  letter-spacing: -.02em;
+}
+.web-app .dialog-heading h2,
+.web-app .ai-path-heading h2,
+.web-app .connect-heading h2,
+.web-app .try-ai h2,
+.web-app .ai-faq h2,
+.web-app .ai-setup-panel h3 {
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-section);
+  font-weight: var(--ui-weight-heading);
+  line-height: var(--ui-leading-heading);
+  letter-spacing: 0;
+}
+.web-app .template-card-heading h2,
+.web-app .ai-path-switch strong,
+.web-app .ai-workflow-steps h3,
+.web-app .ai-step-heading h3,
+.web-app .ai-rules-card h3,
+.web-app .export-options strong {
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-title);
+  font-weight: var(--ui-weight-heading);
+  line-height: var(--ui-leading-heading);
+  letter-spacing: 0;
+}
+.web-app .page-heading > div > p:last-child,
+.web-app .ai-path-intro,
+.web-app .ai-workflow-steps p,
+.web-app .ai-step-heading p,
+.web-app .connect-panel > p:not(.local-connect-note),
+.web-app .ai-agent-note p,
+.web-app .ai-faq p,
+.web-app .dialog-intro,
+.web-app .web-issues p,
+.web-app .template-contribution-copy {
+  font-size: var(--ui-text-body);
+  font-weight: var(--ui-weight-regular);
+  line-height: var(--ui-leading-body);
+}
+.web-app .web-action,
+.web-app .button,
+.web-app .back-link,
+.web-app .web-header nav a,
+.web-app .mobile-tabs button,
+.web-app .ai-faq summary,
+.web-app .ai-rules-details summary,
+.web-app .ai-agent-note summary,
+.web-app .command-option summary {
+  font-size: var(--ui-text-body);
+  font-weight: var(--ui-weight-action);
+  line-height: 1.4;
+}
+.web-app .web-action,
+.web-app .button {
+  min-height: var(--ui-control-height);
+  padding: 8px 12px;
+  border-radius: var(--ui-control-radius);
+}
+.web-app .button.primary,
+.web-app .ai-rules-card > .ai-copy-action .web-action {
+  min-height: var(--ui-primary-height);
+  padding: 10px 16px;
+}
+.web-app .web-icon-button { width: var(--ui-control-height); height: var(--ui-control-height); }
+.web-app .preview-open { font-size: var(--ui-text-body); font-weight: var(--ui-weight-action); }
+.web-app .section-kicker,
+.web-app .web-status,
+.web-app .quiet-link,
+.web-app .template-card-actions > span,
+.web-app .default-badge,
+.web-app .support-badge,
+.web-app .ai-path-switch small,
+.web-app .ai-rules-card p,
+.web-app .ai-copy-action > span,
+.web-app .ai-result-flow,
+.web-app .ai-next-step > span,
+.web-app .export-options small,
+.web-app .web-dialog > small {
+  font-size: var(--ui-text-caption);
+  line-height: 1.6;
+}
+.web-app .copy-block pre { font-size: var(--ui-text-body); line-height: var(--ui-leading-body); }
+.web-app .command-option .copy-block pre,
+.web-app .ai-rules-details pre { font-size: var(--ui-text-caption); line-height: 1.7; }
+.web-app .preview-switcher button,
+.web-app .markdown-shortcut-button,
+.web-app .markdown-history-button,
+.web-app .device-scale-controls button {
+  min-height: var(--ui-compact-height);
+  font-size: var(--ui-text-caption);
+  font-weight: var(--ui-weight-action);
+  line-height: 1.4;
+  border-radius: var(--ui-control-radius);
+}
+.web-app .current-template strong,
+.web-app .current-template a,
+.web-app .article-character-count { font-size: var(--ui-text-caption); line-height: 1.6; }
+@media (max-width: 1100px) {
+  .web-app .markdown-history-button { font-size: 0; }
+}
+@media (max-width: 820px) {
+  .web-app .web-header .document-actions .web-action { width: 36px; padding: 8px; font-size: 0; }
+}
+@media (max-width: 600px) {
+  .web-app { --ui-text-page: 24px; }
+  .web-app .web-header nav a { font-size: var(--ui-text-caption); }
+  .web-app .template-card-actions .web-action { font-size: var(--ui-text-body); }
+  .web-app .current-template { max-width: 48%; gap: 4px; }
+  .web-app .current-template a { padding-left: 0; }
+  .web-app .preview-switcher button { padding-right: 4px; padding-left: 4px; }
+}

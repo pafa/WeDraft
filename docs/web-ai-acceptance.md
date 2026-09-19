@@ -11,12 +11,12 @@
 - `node scripts/smoke-web.mjs`：真实 Chrome，MCP 生成含图片的文章包 → 网页导入 → 编辑/撤回/重做 → 预览微调写回 → 添加图片来源 → 切模板 → 导出。
 - 同一脚本也针对构建后的静态网页运行：真实 HTML + 纯文本剪贴板、浏览器 contenteditable 粘贴、刷新清空、模板 Cookie 保留、旧 IndexedDB 数据不被读取或更改、错误导入不覆盖原稿、缺图阻止复制、文章包重新打开。
 - 1440×1000、390×844、320×740 的编辑器、模板库和 AI 页面已实际检查。手机屏幕固定逻辑尺寸，完整机身等比缩放并支持 100%；状态栏在窄屏保留。中性本地图片样稿没有页面、控制台错误或站外请求。
-- 新版 `smoke-web` 的 16 项真实端到端检查通过：含图灰色示例点击即开始输入、新建空白、七模板与 Cookie 一年、跨标签默认值与导入文章包的模板隔离、页面往返、设备切换后预览编辑写回。
+- 新版 `smoke-web` 的 17 项真实端到端检查通过：含图灰色示例点击即开始输入、新建空白、七模板与 Cookie 一年、跨标签默认值与导入文章包的模板隔离、页面往返、设备切换后预览编辑写回；固定顶栏及从模板库、AI 页面新建与导入。
 - 一键安装在隔离目录验证：真实 shell 下载与安装、自包含 CLI/MCP、实际 MCP 导出文章包与 CLI 正文一致、内置示例、配置备份、重复安装、冲突和完整性失败路径。测试没有触碰真实用户的 Skill 或 Codex 配置。
 - 此前样式候选的定向检查通过：22 个可编辑节点非悬停时无轮廓；模板弹窗关闭、Escape 与焦点恢复；剪贴板 API 不可用时有反馈且无页面异常。
 - 配套 Skill 使用官方 `quick_validate.py` 验证通过。
 
-最新检查记录在 `/private/tmp/wedraft-release-verify.log`、`/private/tmp/wedraft-final-web-qa/`，AI 可复制预览验证在 `/private/tmp/wedraft-ai-copy-qa-20260919/`，无 Node 冷启动记录在 `/private/tmp/wedraft-cold-start.EqvRXh/report.json`。此前测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
+最新检查记录在 `/private/tmp/wedraft-header-verify.log`、`/private/tmp/wedraft-design-system-qa/`，AI 可复制预览验证在 `/private/tmp/wedraft-ai-copy-qa-20260919/`，无 Node 冷启动记录在 `/private/tmp/wedraft-cold-start.EqvRXh/report.json`。此前测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
 
 ## 明确边界
 

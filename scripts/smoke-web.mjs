@@ -363,6 +363,26 @@ try {
   assert.deepEqual(await databaseNames(page), ["wedraft-web-v1"]);
   assert.deepEqual(await legacyDrafts(page), [legacy], "later imports and preview edits never modify or append to the pre-existing draft database");
   check("The legacy draft database remains byte-for-byte equivalent at the record level after all editor actions");
+  for (const width of [1440, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of ["模板库", "接入 AI"]) {
+      await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: route }).click();
+      const header = page.locator(".web-header");
+      const before = await header.boundingBox();
+      await page.locator(".discovery-page").evaluate(element => { element.scrollTop = element.scrollHeight; });
+      assert.equal((await header.boundingBox()).y, before.y);
+      assert(await page.getByRole("button", { name: "新建", exact: true }).isVisible());
+      assert(await page.getByRole("button", { name: "导入", exact: true }).isVisible());
+      await importer.setInputFiles(bundle);
+      await waitFor(async () => new URL(page.url()).hash === "#/" && (await editor.inputValue()) === original.replaceAll("\r\n", "\n"));
+      assert(await editor.isVisible());
+      await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: route }).click();
+      await page.getByRole("button", { name: "新建", exact: true }).click();
+      await waitFor(async () => new URL(page.url()).hash === "#/" && (await editor.inputValue()) === "");
+      assert(await editor.isVisible());
+    }
+  }
+  check("Global header stays fixed while pages scroll; new and import work from both discovery pages on desktop and mobile");
   assert.deepEqual(report.errors, []);
   assert.deepEqual(report.consoleErrors, []);
   assert.deepEqual(report.requestsOutsideApp, []);

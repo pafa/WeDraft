@@ -66,7 +66,7 @@ export function App() {
       digest: input.digest, sourceUrl: input.sourceUrl,
       settings: { ...state.settings, defaultTemplateId: input.templateId }, undoStack: [], redoStack: [] });
     setAssets(input.assets); setDemoActive(false); setActiveBlock(null); setContentSync(null);
-    setCopyConfirm(false); setMessage("");
+    setCopyConfirm(false); setMessage(""); setMessageError(false);
   }, []);
 
   useEffect(() => {
@@ -95,7 +95,8 @@ export function App() {
         ? articleInputSchema.parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)))
         : articleInputSchema.parse({ markdown: new TextDecoder("utf-8", { fatal: true }).decode(bytes), templateId: store.settings.defaultTemplateId });
       renderArticle(input);
-      load(input); notify(`已导入 ${file.name}，可以继续编辑。`); setDialog(null);
+      load(input); setMobilePanel("editor"); window.location.hash = "/";
+      notify(`已导入 ${file.name}，可以继续编辑。`); setDialog(null);
     } catch (error) { notify(error instanceof Error ? error.message : "导入失败，当前文章未被替换。", true); }
   }
 
@@ -154,12 +155,13 @@ export function App() {
     <header className="web-header">
       <div className="brand-family"><a href="#/" className="brand" aria-label="WeDraft 首页"><img className="brand-icon" src={`${import.meta.env.BASE_URL}app-icon.png`} width="32" height="32" alt="WeDraft 应用图标" /><strong>WeDraft</strong></a><a className="publisher-brand" href="https://xiaoha.org" target="_blank" rel="noreferrer" aria-label="小哈公社出品"><img src={`${import.meta.env.BASE_URL}xiaoha-logo.png`} width="20" height="20" alt="" /><span>小哈公社出品</span></a></div>
       <nav aria-label="主导航"><a href="#/" aria-current={editing ? "page" : undefined}>编辑器</a><a href="#/templates" aria-current={route === "/templates" ? "page" : undefined}><Palette size={16} />模板库</a><a href="#/ai" aria-current={route === "/ai" ? "page" : undefined}><Sparkles size={16} />接入 AI</a></nav>
-      {editing && <div className="document-actions">
-      <button className="web-action" onClick={() => load(articleInputSchema.parse({ markdown: "", templateId: readDefaultTemplate(document.cookie) }))}><FilePlus2 size={16} />新建</button>
+      <div className="document-actions">
+      <button className="web-action" onClick={() => { load(articleInputSchema.parse({ markdown: "", templateId: readDefaultTemplate(document.cookie) })); setMobilePanel("editor"); window.location.hash = "/"; }}><FilePlus2 size={16} />新建</button>
       <button className="web-action" onClick={() => fileInput.current?.click()}><FolderOpen size={16} />导入</button>
-    </div>}
+    </div>
       <input ref={fileInput} type="file" accept=".md,.markdown,.txt,.json,.zip" aria-label="导入文章文件" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void importFile(file); }} />
     </header>
+    {!editing && messageError && <p className="global-action-error" role="alert">{message}</p>}
     {editing && <>
     <div className="mobile-tabs" aria-label="编辑与预览切换"><button aria-pressed={mobilePanel === "editor"} onClick={() => setMobilePanel("editor")}>编辑原稿</button><button aria-pressed={mobilePanel === "preview"} onClick={() => setMobilePanel("preview")}>阅读预览</button></div>
     <main className="workspace web-workspace">

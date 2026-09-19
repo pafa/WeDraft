@@ -6,6 +6,7 @@
 
 .web-app {
   height: 100dvh;
+  overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -31,6 +32,9 @@
 .web-app svg { flex-shrink: 0; }
 
 .web-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   min-height: 64px;
   flex-shrink: 0;
   display: flex;
@@ -607,3 +611,5 @@
 .template-contribution-copy { max-width: 380px; margin: 22px 0; color: #73776e; font-size: 15px; line-height: 1.9; }
 @media (max-width: 1000px) { .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .template-grid { grid-template-columns: minmax(0, 1fr); } .template-title { font-size: 22px; } }
+
+.global-action-error { flex-shrink: 0; margin: 0; padding: 8px 20px; color: var(--danger); background: #fff4ee; font-size: 13px; }

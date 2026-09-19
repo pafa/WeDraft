@@ -119,6 +119,7 @@ pnpm dev
 | [小哈公社New 规范](docs/next-edition-guidelines.md) | 默认模板的层级、间距、颜色和 Markdown 示例。 |
 | [架构说明](docs/architecture.md) | 前端、原生层、渲染与数据边界。 |
 | [验收清单](docs/acceptance-tests.md) | 编辑、复制、图片和历史等功能的验证步骤。 |
+| [网页设计规范](docs/web-design-system.md) | 全站字体层级、按钮尺寸和响应式约定。 |
 | [Git 与维护规则](docs/git-workflow.md) | 主线、任务分支、PR 审阅、备份和版本发布。 |
 | [版本记录](CHANGELOG.md) | 应用版本及后续变更记录。 |
 
