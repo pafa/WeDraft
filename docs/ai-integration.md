@@ -63,7 +63,7 @@ sh "$HOME/.local/share/wedraft/manage.sh" uninstall
 
 三个命令分别执行检查、升级、卸载，不要一次全部执行。自定义安装目录时，使用安装器打印出的路径。管理入口会使用原来记录的 Skill、Codex 配置和导出目录，无需再次填写；它不会根据当前工作目录猜测这些位置。
 
-`status` **离线、只读**，输出 JSON：`release.version` 是工具版本，`release.sourceCommit` 是构建源码提交，`release.sourceDirty` 表示构建时源码是否有未提交修改。当前版本仍为 `0.1.0`；同版本的不同提交可以据此区分。源代码压缩包缺少 Git 信息时提交显示为 `null`，不会伪造版本来源。`issues` 会列出已修改、缺失的安装文件或 MCP 配置；有提示时先处理提示，不要直接删除记录来绕过保护。安装元数据保存在工具和 Skill 目录的 `.wedraft-install.json` 中。
+`status` **离线、只读**，输出 JSON：`release.version` 是工具版本，`release.sourceCommit` 是构建源码提交，`release.sourceDirty` 表示构建时源码是否有未提交修改。线上版本为 `0.1.0`，当前源码准备 `0.1.1`；同版本的不同提交也可以据此区分。源代码压缩包缺少 Git 信息时提交显示为 `null`，不会伪造版本来源。`issues` 会列出已修改、缺失的安装文件或 MCP 配置；有提示时先处理提示，不要直接删除记录来绕过保护。安装元数据保存在工具和 Skill 目录的 `.wedraft-install.json` 中。
 
 `upgrade` 从**安装时记录的网站地址**重新获取当前安装资源，验证 SHA-256、试运行 CLI/MCP，然后更新工具、Skill 和版本记录；正常情况下其他 MCP 配置与导出文件不变。也可以重新运行原安装命令，保留原来的自定义路径。它不会自行查找或升级到未发布的 npm 包，也不按 `0.1.0` 字符串判断是否已有新提交。如果需要明确更换可信下载来源，可使用 `upgrade --base-url 'https://另一个可信站点/integrations/'`。曾从临时 `localhost` 安装时，原服务必须可访问，或由你明确指定正式来源。
 
