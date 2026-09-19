@@ -2,128 +2,122 @@
   <img src="apps/desktop/src-tauri/icons/128x128@2x.png" width="88" height="88" alt="WeDraft 应用图标">
 </p>
 
-# WeDraft
+<h1 align="center">WeDraft</h1>
 
-**让文章变成适合微信阅读的排版，手工编辑与 AI 工作流共用一套模板。**
+<p align="center"><strong>把 Markdown 变成适合微信阅读的文章。</strong><br>在网页里边改边看，或让 AI 直接完成排版。</p>
 
-WeDraft 提供网页版、CLI、本地 MCP 与 Skill，并保留原有 Mac 应用。你可以让 AI 整理 Markdown 后回网页调整，也可以直接让已接入 WeDraft 的 AI 为 Markdown 排版，打开结果复制正文。
+<p align="center">
+  <a href="https://wedraft.xiaoha.org">立即使用</a> ·
+  <a href="https://wedraft.xiaoha.org/#/templates">浏览模板</a> ·
+  <a href="https://wedraft.xiaoha.org/#/ai">接入 AI</a> ·
+  <a href="LICENSE">MIT 开源</a>
+</p>
 
-**公开测试版 `0.1.0`。** [打开网页版](https://wedraft.xiaoha.org) · [接入 AI](https://wedraft.xiaoha.org/#/ai)。仓库已采用 [MIT](LICENSE) 开源；站点部署、验证进度与限制见[首发记录](docs/releases/web-0.1.0.md)。真实微信环境尚未完成验收。
+<p align="center">
+  <a href="https://xiaoha.org"><img src="apps/web/public/xiaoha-logo.png" width="20" height="20" alt="小哈公社 Logo"> 小哈公社出品</a>
+</p>
 
-[网页使用](docs/web-guide.md) · [AI 两条使用流程](docs/ai-integration.md) · [模板贡献](docs/templates.md) · [发布与部署材料](docs/deployment.md)
+![WeDraft 网页版：左侧编辑 Markdown，右侧实时查看排版](docs/images/web-editor.png)
 
-原有 Mac 应用基线：
+WeDraft 是面向微信公众号文章的 Markdown 排版工具。标题、段落、引用、列表、代码、表格、图片和来源说明，由统一模板处理；完成后复制富文本正文，粘贴到公众号后台。
 
-当前版本：`1.1.2`
+网页版、CLI、MCP 和 Skill 共用排版核心，让手工编辑与 AI 工作流使用同一套效果。当前网页与 AI 工具为 **0.1.0 公开测试版**。
 
-更新日期：`2026.08.26`
+## 核心功能
 
-**Apple Silicon macOS · 本地存储 · 两套排版模板 · 开源源码**
+- **边写边看，也能直接改预览。** Markdown 与排版实时联动；在预览中微调文字会写回原稿，支持双向定位、滚动、撤回和重做。
+- **七款模板，一键换风格。** 切换排版不改原文，选中的模板可设为默认，下次打开继续使用。
+- **在手机尺寸下检查阅读效果。** 提供网页、iPhone、Android 预览；手机外框等比缩放，保留正文排版宽度。
+- **图片与来源一起排好。** 支持 PNG、JPEG、GIF、WEBP，图片说明、来源与正文统一呈现。
+- **复制前检查，发现问题能定位。** 提示不支持的语法和图片、表格等问题；阻断问题修正后再复制，减少内容静默丢失。
+- **原稿可带走，工作流可接续。** 导出 `.wedraft.zip`，一起保留 Markdown、模板与本地图片；重新导入网页继续编辑，也可导出独立 HTML 预览。
 
-## 网页与 AI 初版（公开测试版）
+## 两种用法
 
-同一套排版核心现在提供独立网页、CLI 和本地 MCP，并附带配套 Skill。可在网页手工排版，也可让 AI 生成预览和 `.wedraft.zip` 文章包，再导入网页继续编辑。
+### 在网页里完成排版
 
-网页与 AI 工具集版本为 `0.1.0`；上方 `1.1.2` 是现有 Mac 应用基线，本次没有发布或替换 Mac 安装包。CLI / MCP 随静态网站提供，未发布 npm 包。
+1. [打开 WeDraft](https://wedraft.xiaoha.org)，点击灰色示例区，粘贴 Markdown 或导入文件。
+2. 选模板、调整文字与图片，对照预览检查效果。
+3. 点击「复制排版」，到公众号后台粘贴正文，单独填写标题并检查后发布。
+
+原稿还不是合适的 Markdown？在[接入 AI → 手工整理](https://wedraft.xiaoha.org/#/ai)复制格式指令，将指令与原文交给 AI，再把结果放回网页。无需安装工具。
+
+### 让 AI 直接排版
+
+把这句话交给能执行本机命令的 AI：
+
+> 读取 https://wedraft.xiaoha.org/connect.md，帮我接入 WeDraft，然后为这篇 Markdown 文章排版。
+
+也可以在终端执行一条命令：
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm dev:web
-# 另一个终端运行命令行或配置本地 MCP
-pnpm build:tools
-node packages/cli/dist/cli.mjs --help
+curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'https://wedraft.xiaoha.org/integrations/'
 ```
 
-上述源码运行方式需要 Node / pnpm，不需要 Rust 或微信凭据。网站的“一条命令接入”会自动准备工具，无需另装 pnpm。网页版直接展示含图示例，点击灰色编辑区即可输入自己的内容，文章只在当前页面临时保留，刷新或关闭后清空；独立模板库提供七款模板并记住默认选择，独立 AI 页面区分手工整理与 Skill / MCP 自动排版。文章包包含原稿、模板和本地图片，可自行下载保留；不读取现有 Mac 数据库。
+安装器准备 CLI、MCP 和 Skill，自动配置 Codex；缺少 Node 时会准备专用运行时。当前支持 macOS / Linux，其他本地 stdio MCP 客户端见[接入指南](docs/ai-integration.md)。
 
-[网页指南](docs/web-guide.md) · [AI / MCP / Skill 接入](docs/ai-integration.md) · [开源管理安排](docs/open-source-plan.md)
+接入后，每篇文章只需一句话：
 
-![独立网页版：手工编辑、排版预览和文章包交接](docs/images/web-editor.png)
+> 用 WeDraft 的青岚模板排版这篇 Markdown，保留原文、链接和图片来源，给我可以复制富文本的预览。
 
-*真实 Chrome 截图，使用中性内置样稿。下文介绍现有 Mac 版功能；网页与 Mac 的存储、图片限制和导出格式有所不同。*
+AI 会生成 `preview.html` 和文章包。打开预览，复制正文即可；需要继续修改时，把文章包导入网页。有浏览器与剪贴板能力的 AI，还可按你的指令继续完成复制、粘贴。WeDraft 本身不操作微信，也不自动发布。
 
-[使用指南](docs/user-guide.md) · [默认模板规范](docs/next-edition-guidelines.md) · [版本记录](CHANGELOG.md) · [开发与维护](docs/git-workflow.md)
+## 七款阅读模板
 
-![WeDraft 编辑与预览界面：左侧 Markdown，右侧小哈公社New 排版](docs/images/editor-overview.png)
-
-*当前源码的 Web 预览截图，使用应用内置组件样稿。原生图片缓存、文章导出与 macOS 剪贴板在桌面 App 中使用。*
-
-## Mac 版：一篇文章的工作流程
-
-1. **输入**：第一行写文章标题，第二行起写正文，或直接粘贴完整稿件。
-2. **排版**：用工具栏处理章节、粗体、引用、列表、代码和图片，切换模板查看效果。
-3. **检查**：在网页版、iPhone、Android 三种视口预览；复制前按提示处理图片、表格和来源等问题。
-4. **复制**：点击“复制排版”，再打开公众号后台粘贴正文。标题单独填写，最终发布由你在微信后台完成。
-
-## Mac 版主要能力
-
-| 能力 | 实际使用方式 |
+| 模板 | 风格 |
 | --- | --- |
-| 实时编辑与预览 | 左侧 Markdown 与右侧排版同步更新，支持内容块定位、双向滚动和文章缩略导航。 |
-| 预览内文字微调 | 在右侧修正标题、正文、引用、列表、表格单元格等文字，修改写回对应 Markdown，并进入撤回历史。 |
-| 两套长文模板 | “小哈公社New”为默认模板，另保留“小哈公社”；切换模板不修改原文。 |
-| 本地正文图片 | 添加 JPG、PNG、WEBP、GIF，填写来源或选择无来源；静态大图在本机优化，GIF 保留动画。 |
-| 复制前检查 | 定位到具体 Markdown 行；必须修正的问题会阻止复制，普通兼容性提醒可确认后继续。 |
-| 富文本复制 | 同时写入 HTML 和纯文本，只复制正文，便于粘贴到公众号编辑器或普通文本框。 |
-| 历史与导出 | 执行“复制排版”后进入本地历史；支持重新打开、删除、单篇 Markdown 导出与全部文章 ZIP 导出。 |
-| 写作辅助规则 | 一键复制应用支持的 Markdown 规则，供你在外部 AI 工具中使用；应用不内置 AI 调用。 |
+| 小哈公社 | 经典暖色 |
+| 小哈公社New | 清爽绿调，初始默认模板 |
+| 素笺 | 暖灰留白 |
+| 墨刊 | 黑白刊物 |
+| 青岚 | 松青书页 |
+| 蓝图 | 理性蓝调 |
+| 朱砂 | 砖红篇章 |
 
-## Mac 版数据与使用边界
+[打开模板库](https://wedraft.xiaoha.org/#/templates)查看完整效果。欢迎 Fork 项目，设计自己的模板并提交 PR；合入后的模板会随版本提供给网页和 AI 工具。详见[模板贡献指南](docs/templates.md)。
 
-- 不需要微信 AppID、AppSecret、服务地址或任何公众号凭据，也不调用微信发布接口。
-- 文章历史、设置和缓存图片存储在本机；不提供账号、云同步或内容上传服务。
-- 普通编辑不等于已存入历史：**只有执行“复制排版”后文章才会进入历史**。重要原稿仍应自行保存。
-- 本地图片复制时嵌入富文本；外部图片链接会访问其来源，粘贴后仍需在微信后台检查图片和排版。
-- 导出保存 Markdown 文本；全部导出的 ZIP 不包含本地图片缓存，不能作为完整 App 数据备份。
+## 本地处理，文件由你保管
 
-详见[使用指南与常见问题](docs/user-guide.md)。
+无需注册、微信凭据或模型 API Key。WeDraft 不提供内容上传、云同步或遥测；外部图片仍会访问来源网站，使用外部 AI 时由你选择的 AI 服务处理稿件。
 
-## 运行与构建
+**网页不是文章仓库。** 文章与本地图片仅在当前页面临时保留，刷新、关闭或通过导航返回首页会重新显示示例。需要保留时，请先导出文章包；Cookie 只记住模板偏好。
 
-原有桌面应用面向 **Apple Silicon Mac**。仓库已开源，但不在 GitHub 提供 Mac 安装包下载或自动发布。当前构建使用 ad-hoc 签名，未做 Developer ID 公证。
+手机预览是模拟视口，当前尚未完成真实微信环境验收；发布前请在公众号后台检查图片、链接与最终排版。
 
-从源码运行需要 Node.js、pnpm、Rust 和 Xcode Command Line Tools。工具链版本分别以 `.node-version`、`package.json` 的 `packageManager` 和 `rust-toolchain.toml` 为准。
+## macOS 应用
 
-```bash
+当前版本：`1.1.2` · 更新日期：`2026.08.26`
+
+WeDraft 同时保留 Apple Silicon Mac 应用，支持本地图片优化、复制后的文章历史，以及单篇 Markdown / 多篇 ZIP 导出。Mac 历史与网页文章包各自独立。
+
+![WeDraft Mac 前端：Markdown 编辑与小哈公社New 模板预览](docs/images/editor-overview.png)
+
+*Mac 前端的浏览器预览截图，使用内置样稿。*
+
+目前提供源码构建，没有公开 Mac 安装包；当前构建采用 ad-hoc 签名，未做 Developer ID 公证。详细操作见 [Mac 使用指南](docs/user-guide.md)。
+
+## 本地开发
+
+Node.js 与 pnpm 版本分别见 `.node-version` 和 `package.json`。仅运行网页或 AI 工具不需要 Rust。
+
+```sh
 git clone https://github.com/pafa/WeDraft.git
 cd WeDraft
 pnpm install --frozen-lockfile
-./scripts/setup-git
-pnpm dev
+pnpm dev:web
 ```
-
-常用命令：
 
 | 命令 | 用途 |
 | --- | --- |
-| `pnpm dev` | 启动 Tauri 桌面开发环境。 |
-| `pnpm dev:web` | 启动独立网页版，临时排版、图片与文章包交接。 |
-| `pnpm dev:desktop-web` | 查看 Mac 前端的浏览器预览；不具备完整原生能力。 |
-| `pnpm build:web` | 构建可托管的静态网页到 `apps/web/dist`。 |
-| `pnpm build:tools` | 构建 CLI 与本地 stdio MCP。 |
-| `pnpm smoke:web` | 用本机 Chrome 验证 MCP → 网页 → 导出和剪贴板交接。 |
-| `./scripts/verify` | 检查版本、入库文件、类型、测试和前端构建。 |
-| `cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml` | 运行 Rust 原生测试。 |
-| `pnpm build:mac` | 构建 `aarch64-apple-darwin` 的 `.app` 与 `.dmg`，不构建 Intel 版本。 |
-| `./scripts/backup` | 上传当前已提交分支并核对远端 SHA；要求工作区干净。 |
+| `pnpm build:web` | 构建静态网页与 AI 安装资源 |
+| `pnpm build:tools` | 构建 CLI 与本地 MCP |
+| `node packages/cli/dist/cli.mjs --help` | 查看 CLI 用法（先构建工具） |
+| `pnpm dev` | 启动 Mac 开发环境，另需 Rust 与 Xcode Command Line Tools |
+| `pnpm build:mac` | 构建 Apple Silicon `.app` 与 `.dmg` |
+| `./scripts/verify` | 运行仓库检查、类型检查、测试与构建 |
 
-安装包位置为 `<Cargo target 目录>/aarch64-apple-darwin/release/bundle/`。未设置 `CARGO_TARGET_DIR` 时，target 目录通常位于 `apps/desktop/src-tauri/target/`；以实际构建输出为准。
+`main` 是最新已合入的开源主线，线上版本可能晚于源码。欢迎[报告问题](https://github.com/pafa/WeDraft/issues)、贡献模板或改进代码；提交前请阅读[贡献指南](CONTRIBUTING.md)。
 
-代码质量审核与修复记录见[审核记录](docs/code-quality-audit.md)，包括源码保真、导入导出边界、交互回归与冗余清理。修复候选不代表已发布安装包。
+[网页指南](docs/web-guide.md) · [AI / CLI / MCP](docs/ai-integration.md) · [架构](docs/architecture.md) · [部署](docs/deployment.md) · [版本记录](CHANGELOG.md) · [发布记录](docs/releases/web-0.1.0.md) · [维护规则](docs/git-workflow.md)
 
-## 主线与文档
-
-**`main` 是本项目唯一的维护主线。** 本地完成开发和验证，任务分支通过 PR 审阅并合入 `main`。每个 PR 注明变更、验证和限制。仓库现已公开，后续合并与部署仍分别获得维护者批准。
-
-| 文档 | 内容 |
-| --- | --- |
-| [使用指南](docs/user-guide.md) | 从输入到复制、模板、图片、历史、导出和常见问题。 |
-| [小哈公社New 规范](docs/next-edition-guidelines.md) | 默认模板的层级、间距、颜色和 Markdown 示例。 |
-| [架构说明](docs/architecture.md) | 前端、原生层、渲染与数据边界。 |
-| [共享组件准备](docs/shared-components.md) | Mac 组件边界和后续开源任务的复用入口。 |
-| [验收清单](docs/acceptance-tests.md) | 编辑、复制、图片和历史等功能的验证步骤。 |
-| [网页设计规范](docs/web-design-system.md) | 全站字体层级、按钮尺寸和响应式约定。 |
-| [Git 与维护规则](docs/git-workflow.md) | 主线、任务分支、PR 审阅、备份和版本发布。 |
-| [版本记录](CHANGELOG.md) | 应用版本及后续变更记录。 |
-
-源码备份不包含用户文章、缓存图片、密钥、安装包或未提交工作。页面说明与截图随实际功能变更维护，应用版本日期与文档整理日期分别记录。
+本项目采用 [MIT 许可证](LICENSE)。
