@@ -1,6 +1,33 @@
 {
-  "name":"@wedraft/web","version":"0.1.0","private":true,"type":"module",
-  "scripts":{"dev":"vite","build":"tsc --noEmit && vite build","preview":"vite preview","lint":"tsc --noEmit","typecheck":"tsc --noEmit","test":"vitest run"},
-  "dependencies":{"@wedraft/core":"workspace:*","@wedraft/article-model":"workspace:*","@wedraft/article-parser":"workspace:*","@wedraft/shared-types":"workspace:*","react":"^19.2.8","react-dom":"^19.2.8","lucide-react":"^0.468.0"},
-  "devDependencies":{"@types/react":"^19.1.9","@types/react-dom":"^19.1.7","@vitejs/plugin-react":"^5.0.2","typescript":"^5.9.3","vite":"^8.1.5","vitest":"^3.2.7","fake-indexeddb":"6.2.4"}
+  "name": "@wedraft/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@wedraft/core": "workspace:*",
+    "@wedraft/article-model": "workspace:*",
+    "@wedraft/article-parser": "workspace:*",
+    "@wedraft/shared-types": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "lucide-react": "^0.468.0",
+    "@wedraft/editor-ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.5",
+    "vitest": "^3.2.7",
+    "fake-indexeddb": "6.2.4"
+  }
 }

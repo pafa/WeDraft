@@ -16,7 +16,7 @@
 - 此前样式候选的定向检查通过：22 个可编辑节点非悬停时无轮廓；模板弹窗关闭、Escape 与焦点恢复；剪贴板 API 不可用时有反馈且无页面异常。
 - 配套 Skill 使用官方 `quick_validate.py` 验证通过。
 
-最新检查记录在 `/private/tmp/wedraft-header-verify.log`、`/private/tmp/wedraft-design-system-qa/`，AI 可复制预览验证在 `/private/tmp/wedraft-ai-copy-qa-20260919/`，无 Node 冷启动记录在 `/private/tmp/wedraft-cold-start.EqvRXh/report.json`。此前测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
+共享组件整合后的最新检查记录在 `/private/tmp/wedraft-pr3-integration-verify.log`、`/private/tmp/wedraft-pr3-integration-qa/`，AI 可复制预览验证在 `/private/tmp/wedraft-ai-copy-qa-20260919/`，无 Node 冷启动记录在 `/private/tmp/wedraft-cold-start.EqvRXh/report.json`。此前测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
 
 ## 明确边界
 

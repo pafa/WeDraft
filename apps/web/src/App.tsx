@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, Copy, Download, FilePlus2, FolderOpen, Monitor, Sparkles, Palette, Upload, X } from "lucide-react";
 import { articleInputSchema, createPreviewHtml, ENGINE_VERSION, exportArticleBundle, importArticleBundle, MAX_BUNDLE_BYTES, renderArticle, validateAssets, type ArticleAsset, type LocatedIssue, type PortableArticle } from "@wedraft/core";
-import { ArticleEditor } from "../../desktop/src/components/ArticleEditor.js";
-import { WechatPreview } from "../../desktop/src/components/WechatPreview.js";
-import { useEditorStore } from "../../desktop/src/stores/editor-store.js";
-import type { ContentAnchor, ContentSyncEvent } from "../../desktop/src/services/scroll-sync.js";
+import { ArticleEditor } from "@wedraft/editor-ui/components/ArticleEditor";
+import { WechatPreview } from "@wedraft/editor-ui/components/WechatPreview";
+import { useEditorStore } from "@wedraft/editor-ui/stores/editor-store";
+import type { ContentAnchor, ContentSyncEvent } from "@wedraft/editor-ui/services/scroll-sync";
 import { copyHtml, download, prepareBrowserImage } from "./platform.js";
 import { SAMPLE, loadSampleAssets } from "./sample.js";
 import { TemplatesPage, AiPage } from "./Pages.js";

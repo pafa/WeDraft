@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, FileText, Plus, Sparkles, X } from "lucide-react";
 import { listTemplates, renderArticle } from "@wedraft/core";
-import { MARKDOWN_RULES_PROMPT } from "../../desktop/src/markdown-rules.js";
+import { MARKDOWN_RULES_PROMPT } from "@wedraft/editor-ui/markdown-rules";
 
 const catalog = listTemplates();
 const example = `# 让内容，自然地被读懂

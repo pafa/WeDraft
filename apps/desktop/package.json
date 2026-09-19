@@ -28,7 +28,8 @@
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.62.0",
     "zod": "^4.4.3",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "@wedraft/editor-ui": "workspace:*"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.4",
