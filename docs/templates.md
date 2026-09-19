@@ -16,7 +16,7 @@
 | `blueprint` | 蓝图 | 理性蓝调 |
 | `cinnabar` | 朱砂 | 砖红篇章 |
 
-五款阅读模板接回自已有设计任务 `codex/feat/five-reading-themes` 的 `templates/reading-editions.ts`，保留其原名称、样式及兼容性测试。原任务的其他桌面功能与文档没有一并迁入。
+五款阅读模板定义在 `templates/reading-editions.ts`，共享相同的注册与兼容性检查。
 
 ## 从现有模板开始
 
@@ -92,6 +92,6 @@ pnpm dev:web
 
 ## 社区目录如何增长
 
-正式公开的目标是现有 [pafa/WeDraft](https://github.com/pafa/WeDraft)。当前仍是私有备份；公开后可以通过该仓库的“提交模板”Issue 表单讨论设计，或直接准备 PR。Issue 是提案记录，模板不会因提交 Issue 自动上架。
+在 [pafa/WeDraft](https://github.com/pafa/WeDraft) 的“提交模板”Issue 表单讨论设计，或 Fork 后直接提交 PR。Issue 是提案记录，模板不会因提交 Issue 自动上架。
 
-维护者检查来源、内容保真、允许的样式、自动化结果和实际预览，批准后登记并随版本提供。网页只显示已随版本构建的目录，不从外部投稿中执行任意代码。当前本地审阅与发布授权仍以 [Git 规则](git-workflow.md) 为准；项目采用根目录 [MIT LICENSE](../LICENSE)，此文档不改变仓库可见性。
+维护者检查来源、内容保真、允许的样式、自动化结果和实际预览，批准后登记并随版本提供。网页只显示已随版本构建的目录，不从外部投稿中执行任意代码。贡献流程见 [CONTRIBUTING](../CONTRIBUTING.md)，项目采用根目录 [MIT LICENSE](../LICENSE)。

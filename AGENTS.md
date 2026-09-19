@@ -2,7 +2,7 @@
 
 ## Mission
 
-Maintain WeDraft as a personal, local-first macOS WeChat formatting application. It does not publish to WeChat, require WeChat credentials, or send article content to a WeDraft service.
+Maintain WeDraft as a local-first WeChat formatting product: a public Web/AI beta and a macOS application baseline. It does not publish to WeChat, require WeChat credentials, or send article content to a WeDraft service.
 
 ## Boundaries
 
@@ -28,7 +28,8 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 - Review the complete local diff, including new files, and report the candidate SHA, actual checks and limitations. Create or update a PR for the reviewed task branch; local review complements the PR. Never claim a previous build verifies a newer candidate.
 - Obtain the owner's explicit approval of the current PR and head SHA before merging through the PR. A changed candidate needs renewed approval. Do not replace the PR workflow with a local merge or direct push to main. After the PR merges, fetch and fast-forward local main only when its worktree is clean; preserve other tasks' work. Never force-push or delete main.
 - After each completed task, back up its committed task branch with `./scripts/backup`. After an approved PR merge, synchronize local `main` with the remote merge commit. Backing up a task branch is not approval to merge or release. Verify the remote SHA; do not claim uncommitted or unpushed work is backed up. Never use `git push --mirror` or push Codex internal refs.
-- Releases come from a clean, approved local `main` commit, with matching app versions, `CHANGELOG.md`, an annotated `vX.Y.Z` tag, source SHA and local installer SHA-256 checksums. Creating a release tag, publishing or replacing the installed app requires specific authorization. Never move existing tags or replace release assets.
+- Web/AI deployments come from a clean, approved `main`, with source SHA, Web/tool versions, `CHANGELOG.md`, checksums and a retained rollback artifact. Follow `docs/deployment.md`; deploying requires approval and does not require a Mac build or Git tag.
+- Mac releases additionally require matching app versions, an annotated `vX.Y.Z` tag and installer SHA-256 checksums. Creating a release tag, publishing or replacing the installed app requires specific authorization. Never move existing tags or replace release assets.
 - Keep installers and build records locally under ignored `release/` or `artifacts/`; GitHub backs up source branches and approved tags, not app data or installers. Preserve older packages for rollback; never roll back user data implicitly.
 - Private article history, cached user images, credentials, local exports and built installers stay out of Git. Source icons and the built-in sample image belong in Git. Do not add accounts, signing credentials or new remote services as part of this workflow.
 
