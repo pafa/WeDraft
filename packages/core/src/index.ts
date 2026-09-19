@@ -8,6 +8,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { z } from "zod";
 import { assetDataUrl, assetSchema, MAX_ASSETS, MAX_SOURCE_LENGTH, validateAssets } from "./assets.js";
+import { PREVIEW_COPY_SCRIPT, PREVIEW_COPY_CSP_HASH } from "./preview-copy.js";
 
 export * from "./assets.js";
 export * from "./bundle.js";
@@ -136,5 +137,6 @@ export function escapeHtml(value: string): string {
 }
 
 export function createPreviewHtml(result: ReturnType<typeof renderArticle>): string {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(result.document.title)}</title><style>body{margin:0;background:#f5f4ef;color:#24342f;font-family:system-ui,sans-serif}main{max-width:677px;margin:24px auto;background:white;padding:28px;box-sizing:border-box}h1{font-size:26px;line-height:1.5}aside{padding:12px;background:#f8ebe3;font-size:14px;margin-bottom:24px}img{max-width:100%}@media(max-width:720px){main{margin:0;padding:24px 20px}}</style></head><body><main>${result.status === "blocked" ? "<aside>这篇文章仍有阻断问题。预览仅供检查，请修正后再复制。</aside>" : ""}<h1>${escapeHtml(result.document.title)}</h1>${result.previewHtml}</main></body></html>`;
+  const blocked = result.status === "blocked";
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https: http:; style-src 'unsafe-inline'; script-src '${PREVIEW_COPY_CSP_HASH}'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(result.document.title)}</title><style>body{margin:0;background:#f5f4ef;color:#24342f;font-family:system-ui,sans-serif}main,.copy-bar{max-width:677px;margin:24px auto;box-sizing:border-box}main{background:white;padding:28px}h1{font-size:26px;line-height:1.5}aside{padding:12px;background:#f8ebe3;font-size:14px;margin-bottom:24px}img{max-width:100%}.copy-bar{padding:0 12px}.copy-bar button{background:#356c5e;color:white;border:0;border-radius:8px;padding:12px 20px;font-size:15px;cursor:pointer}.copy-bar button:disabled{opacity:.5;cursor:default}.copy-bar p{font-size:13px;line-height:1.7;color:#68746c}@media(max-width:720px){main{margin:0;padding:24px 20px}.copy-bar{margin:18px auto;padding:0 20px}}</style></head><body><header class="copy-bar"><button id="wedraft-copy"${blocked ? " disabled" : ""}>复制正文排版</button><p id="wedraft-copy-status" role="status">${blocked ? "原稿有阻断问题，请修正后再复制。" : "复制后可粘贴到微信编辑器；本页不会自动发布。"}</p></header><main>${blocked ? "<aside>这篇文章仍有阻断问题。预览仅供检查，请修正后再复制。</aside>" : ""}<h1>${escapeHtml(result.document.title)}</h1><section id="wedraft-body">${result.html ?? result.previewHtml}</section></main><pre id="wedraft-plain-text" hidden>${escapeHtml(result.plainText)}</pre><script>${PREVIEW_COPY_SCRIPT}</script></body></html>`;
 }

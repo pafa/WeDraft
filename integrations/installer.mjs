@@ -94,7 +94,7 @@ export async function install(options) {
   const [previous, previousSkill, configStat] = await Promise.all([inspectOwnedDirectory(installDir), inspectOwnedDirectory(skillDir), regularFile(configFile)]);
   const originalConfig = configStat ? await readFile(configFile, 'utf8') : '';
   const manifest = JSON.parse(await fetchBytes(new URL('manifest.json', base), 64 * 1024));
-  const names = ['cli.mjs', 'server.mjs', 'SKILL.md', 'sample.md'];
+  const names = ['cli.mjs', 'server.mjs', 'SKILL.md', 'sample.md', 'THIRD-PARTY-NOTICES.txt', 'LICENSE'];
   if (manifest.schemaVersion !== 1 || manifest.product !== 'wedraft' || !manifest.files) throw new Error('Unsupported WeDraft installation manifest.');
   const payload = Object.fromEntries(await Promise.all(names.map(async name => {
     const record = manifest.files[name];
@@ -111,9 +111,20 @@ export async function install(options) {
   const newConfig = configureMcp(originalConfig, block, previous);
   const skillText = payload['SKILL.md'].toString('utf8').replaceAll('{{WEDRAFT_CLI}}', command).replaceAll('{{WEDRAFT_SAMPLE}}', shellQuote(join(installDir, 'sample.md')));
   const toolFiles = { 'cli.mjs': payload['cli.mjs'], 'server.mjs': payload['server.mjs'], 'sample.md': payload['sample.md'], 'mcp-client.json': Buffer.from(JSON.stringify({ mcpServers: { wedraft: mcp } }, null, 2) + '\n') };
-  if (options.copyRuntime) toolFiles.node = await readFile(process.execPath);
+  toolFiles['THIRD-PARTY-NOTICES.txt'] = payload['THIRD-PARTY-NOTICES.txt'];
+  toolFiles.LICENSE = payload.LICENSE;
+  if (options.copyRuntime) {
+    if (!options.runtimeLicense || !(await regularFile(options.runtimeLicense))) throw new Error('Copying the private Node runtime requires its official LICENSE file (--runtime-license).');
+    const license = await readFile(options.runtimeLicense);
+    if (!license.length) throw new Error('The Node runtime LICENSE file is empty.');
+    toolFiles.node = await readFile(process.execPath);
+    toolFiles['NODE-LICENSE.txt'] = license;
+  }
   // A previous private runtime stays owned, even when a later invocation finds another Node.
-  else if (previous?.files.node) toolFiles.node = await readFile(join(installDir, 'node'));
+  else if (previous?.files.node) {
+    toolFiles.node = await readFile(join(installDir, 'node'));
+    if (previous.files['NODE-LICENSE.txt']) toolFiles['NODE-LICENSE.txt'] = await readFile(join(installDir, 'NODE-LICENSE.txt'));
+  }
   const skillFiles = { 'SKILL.md': Buffer.from(skillText) };
   for (const [directory, files, owned] of [[installDir, toolFiles, previous], [skillDir, skillFiles, previousSkill]]) {
     for (const name of Object.keys(files)) if (await exists(join(directory, name)) && !owned?.files[name]) throw new Error(`Unmanaged existing file preserved: ${join(directory, name)}`);
@@ -149,9 +160,9 @@ export async function install(options) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
-    const { values } = parseArgs({ strict: true, options: Object.fromEntries(['base-url', 'install-dir', 'skill-dir', 'config-file', 'output-dir'].map(name => [name, { type: 'string' }]).concat([['copy-runtime', { type: 'boolean' }]])) });
+    const { values } = parseArgs({ strict: true, options: Object.fromEntries(['base-url', 'install-dir', 'skill-dir', 'config-file', 'output-dir', 'runtime-license'].map(name => [name, { type: 'string' }]).concat([['copy-runtime', { type: 'boolean' }]])) });
     if (!values['base-url']) throw new Error('--base-url is required.');
-    const result = await install({ baseUrl: values['base-url'], installDir: values['install-dir'], skillDir: values['skill-dir'], configFile: values['config-file'], outputDir: values['output-dir'], copyRuntime: values['copy-runtime'] });
+    const result = await install({ baseUrl: values['base-url'], installDir: values['install-dir'], skillDir: values['skill-dir'], configFile: values['config-file'], outputDir: values['output-dir'], copyRuntime: values['copy-runtime'], runtimeLicense: values['runtime-license'] });
     process.stdout.write(`\nWeDraft is ready. Skill installed and Codex MCP configured.\nUse immediately: ${result.cliCommand} templates\nMCP command/args: ${join(result.installDir, 'mcp-client.json')}\nArticle exports: ${result.outputDir}\n${result.configBackup ? `Previous configuration backed up: ${result.configBackup}\n` : ''}If this conversation has not refreshed its tools, use the CLI now or reload the conversation.\n`);
   } catch (error) { process.stderr.write(`WeDraft setup stopped: ${error.message}\n`); process.exitCode = 1; }
 }

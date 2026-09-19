@@ -18,7 +18,9 @@ The installer also includes `sample.md` beside the CLI. For a first-run check, l
 
 ## Start using it
 
-Ask WeDraft to list templates, validate the complete original Markdown, then export the article. Return `preview.html` and `article.wedraft.zip` as local file links, preserving wording, links, images and sources. The bundle can be opened in the web editor. Do not remove unsupported content just to pass checks.
+Ask WeDraft to list templates, validate the complete original Markdown, then export the article. Return `preview.html` first: it has a “复制正文排版” button for pasting the body into WeChat without a round trip through the web editor. Also return `article.wedraft.zip` for optional further editing. Preserve wording, links, images and sources. Do not remove unsupported content just to pass checks. A blocked preview disables copying.
+
+With the user's instruction and suitable browser/clipboard tools, the host Agent can continue by opening that preview, copying the result and pasting into a specified draft. These are host actions, not capabilities of the local WeDraft MCP. Do not claim to paste without performing and verifying it; final publication requires its own authorization.
 
 Example request: “Use WeDraft to format this article in 青岚. Preserve the original wording and give me a preview plus an editable article bundle.”
 

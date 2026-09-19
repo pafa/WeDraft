@@ -27,7 +27,10 @@ const server = createServer(async (request, response) => {
 beforeAll(async () => {
   execFileSync(process.execPath, [join(root, "scripts/build-integrations.mjs")], { cwd: root });
   workspace = await mkdtemp(join(tmpdir(), "wedraft-install-test-"));
-  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve(); });
+  });
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Missing test server address");
   baseUrl = `http://127.0.0.1:${address.port}/`;
@@ -79,6 +82,12 @@ describe("one-command installation", () => {
     expect(config).toContain("[mcp_servers.wedraft]");
     expect(await readFile(result.configBackup, "utf8")).toBe(original);
     expect(await readFile(join(options.skillDir, "SKILL.md"), "utf8")).not.toContain("{{WEDRAFT_CLI}}");
+    const notices = await readFile(join(options.installDir, "THIRD-PARTY-NOTICES.txt"), "utf8");
+    expect(notices).toBe(await readFile(join(root, "artifacts/integrations/THIRD-PARTY-NOTICES.txt"), "utf8"));
+    expect(await readFile(join(options.installDir, "LICENSE"), "utf8")).toBe(await readFile(join(root, "LICENSE"), "utf8"));
+    const installationRecord = JSON.parse(await readFile(join(options.installDir, ".wedraft-install.json"), "utf8"));
+    expect(installationRecord.files["THIRD-PARTY-NOTICES.txt"]).toMatch(/^[a-f0-9]{64}$/);
+    expect(installationRecord.files.LICENSE).toMatch(/^[a-f0-9]{64}$/);
     const templates = JSON.parse((await run(result.mcp.command, [join(options.installDir, "cli.mjs"), "templates"], { cwd: workspace })).stdout);
     expect(JSON.stringify(templates)).toContain("next-edition");
     const markdown = await readFile(join(options.installDir, "sample.md"), "utf8");
@@ -94,6 +103,9 @@ describe("one-command installation", () => {
     const again = await install(options);
     expect(again.configBackup).toBeNull();
     expect(await readFile(options.configFile, "utf8")).toBe(config);
+    await writeFile(join(options.installDir, "LICENSE"), "locally edited license");
+    await expect(install(options)).rejects.toThrow("Locally edited");
+    expect(await readFile(join(options.installDir, "LICENSE"), "utf8")).toBe("locally edited license");
   });
   it("executes the actual shell bootstrap against an isolated destination", async () => {
     const options = await paths("bootstrap");
@@ -103,10 +115,21 @@ describe("one-command installation", () => {
   });
   it("can install a private runtime without relying on Node in PATH", async () => {
     const options = await paths("private-runtime");
-    const result = await install({ ...options, copyRuntime: true });
+    const runtimeLicense = join(workspace, "node-license-fixture.txt");
+    const license = "Node runtime license fixture for unit-test propagation only.\n";
+    await writeFile(runtimeLicense, license);
+    await expect(install({ ...options, copyRuntime: true })).rejects.toThrow("official LICENSE");
+    const result = await install({ ...options, copyRuntime: true, runtimeLicense });
+    expect(await readFile(join(options.installDir, "NODE-LICENSE.txt"), "utf8")).toBe(license);
+    const record = JSON.parse(await readFile(join(options.installDir, ".wedraft-install.json"), "utf8"));
+    expect(record.files["NODE-LICENSE.txt"]).toMatch(/^[a-f0-9]{64}$/);
     expect(result.mcp.command).toBe(join(options.installDir, "node"));
     expect((await mcpRequest(result.mcp.command, result.mcp.args, "私有运行时\n\n完整保留原文。")).tools).toContain("export_article");
-  });
+    await install({ ...options, copyRuntime: true, runtimeLicense });
+    expect(await readFile(join(options.installDir, "NODE-LICENSE.txt"), "utf8")).toBe(license);
+    await writeFile(join(options.installDir, "NODE-LICENSE.txt"), "local edits");
+    await expect(install({ ...options, copyRuntime: true, runtimeLicense })).rejects.toThrow("Locally edited");
+  }, 20_000);
   it("refuses foreign configs, foreign Skill files and local edits", async () => {
     const options = await paths("conflicts");
     const foreign = '[mcp_servers."wedraft"]\ncommand = "my-own-tool"\n';

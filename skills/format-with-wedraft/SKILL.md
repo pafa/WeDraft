@@ -29,8 +29,10 @@ Pass complete original Markdown. For a local `.wedraft.zip`, pass it directly to
 
 Use a new output directory whose parent exists. Omit `--asset-root` if there are no local images. CLI exit code 2 means content is blocked, not a tool crash. Report the specific issue and line; do not remove unsupported content to make the check pass. Blocked drafts can still be preserved in the article bundle, but are not ready-to-copy output.
 
-## Deliver an editable result
+## Deliver a ready-to-copy result
 
-Return links to `preview.html` and `article.wedraft.zip`, plus material diagnostics. Explain that the bundle can be imported into the WeDraft web editor for further changes. Local output paths refer to the machine running the tool and are not hosted download URLs.
+Return a link to `preview.html` first: its “复制正文排版” button copies the formatted body as HTML and plain text, excluding the article title. The user can paste it into the WeChat editor without opening the WeDraft editor first. Also return `article.wedraft.zip` for optional later edits. A blocked preview disables copying; report the specific issue before calling the result ready. Local output paths refer to the machine running the tool and are not hosted download URLs.
+
+If the user explicitly asks to continue with copying or pasting and the host has suitable browser/clipboard tools, the Agent can open the exact generated preview, use its copy button, and paste into the user-selected draft. Use only the neutral generated body and the specified destination; verify the resulting content. Do not overwrite another draft or perform final publication without authorization. WeDraft's MCP itself does not operate a browser or clipboard. If the host lacks those tools, deliver the copyable preview and explain the remaining user step; never report a paste that was not performed.
 
 Do not claim the HTML is verified in WeChat from a renderer test alone. Formatting and export do not imply publishing or clipboard access. No WeDraft tool publishes to WeChat; final paste and publication belong to the user's chosen workflow.

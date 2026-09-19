@@ -1,6 +1,11 @@
+import { encodeBase64, type ArticleAsset } from "@wedraft/core";
+import sampleImage from "../../desktop/public/sample-editorial-image.png?url";
+
 export const SAMPLE = `让一篇文章，拥有舒服的阅读节奏
 
 写作完成之后，排版应该是一件轻松的事。把文章放进 WeDraft，选好模板，再留一点时间读一遍。你可以手工调整，也可以导入 AI 生成的文章包，接着完成最后的检查。
+
+![装满日用品的现代购物车与木制手推车](images/sample-editorial-image.png "图片来源：WeDraft 内置示例")
 
 ---
 
@@ -38,3 +43,9 @@ export const SAMPLE = `让一篇文章，拥有舒服的阅读节奏
 1. 本文是 WeDraft 内置操作样稿
 2. [Markdown 语法说明](https://commonmark.org/help/)
 `;
+
+export async function loadSampleAssets(): Promise<ArticleAsset[]> {
+  const response = await fetch(sampleImage);
+  if (!response.ok) throw new Error("示例图片暂时未能加载，请刷新重试。");
+  return [{ path: "images/sample-editorial-image.png", mimeType: "image/png", base64: encodeBase64(new Uint8Array(await response.arrayBuffer())) }];
+}

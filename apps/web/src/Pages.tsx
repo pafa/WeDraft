@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type CSSProperties } from "react";
-import { ArrowLeft, ArrowUpRight, Check, Copy, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, FileText, Plus, Sparkles, X } from "lucide-react";
 import { listTemplates, renderArticle } from "@wedraft/core";
+import { MARKDOWN_RULES_PROMPT } from "../../desktop/src/markdown-rules.js";
 
 const catalog = listTemplates();
 const example = `# 让内容，自然地被读懂
@@ -31,61 +32,82 @@ const example = `# 让内容，自然地被读懂
 1. [WeDraft 排版示例](https://example.com)
 `;
 
-function TemplateDetail({ name, onClose, children }: { name: string; onClose: () => void; children: ReactNode }) {
+function TemplateDetail({ name, onClose, children, articlePreview = true }: { name: string; onClose: () => void; children: ReactNode; articlePreview?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
-  return <dialog ref={ref} className="template-detail-overlay" aria-label={`${name}完整排版`} onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) ref.current?.close(); }}><section className="template-detail"><div className="dialog-heading"><h2>{name}</h2><button autoFocus className="web-icon-button" aria-label="关闭模板预览" onClick={() => ref.current?.close()}><X size={20} /></button></div>{children}</section></dialog>;
+  return <dialog ref={ref} className="template-detail-overlay" aria-label={articlePreview ? `${name}完整排版` : name} onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) ref.current?.close(); }}><section className="template-detail"><div className="dialog-heading"><h2>{name}</h2><button autoFocus className="web-icon-button" aria-label={articlePreview ? "关闭模板预览" : "关闭添加说明"} onClick={() => ref.current?.close()}><X size={20} /></button></div>{children}</section></dialog>;
 }
 
 export function TemplatesPage({ defaultId, currentId, onChoose }: { defaultId: string; currentId: string; onChoose: (id: string) => void }) {
-  const [query, setQuery] = useState("");
+  const [contributing, setContributing] = useState(false);
   const [detail, setDetail] = useState<string | null>(null);
   const previews = useMemo(() => new Map(catalog.map((template) => [template.id, renderArticle({ markdown: example, templateId: template.id }).previewHtml])), []);
   const selected = catalog.find((template) => template.id === detail);
-  const matches = catalog.filter((template) => `${template.name} ${template.description}`.includes(query.trim()));
   return <main className="discovery-page template-page">
-    <a className="back-link" href="#/"><ArrowLeft size={16} />返回编辑</a>
-    <div className="page-heading"><div><p className="section-kicker">为你的文字，选一种气质</p><h1>模板库</h1><p>从这里挑选喜欢的排版。设为默认后，下次打开就能直接使用。</p></div><label className="catalog-search"><Search size={18} /><input aria-label="搜索模板" placeholder="搜索名称或文章类型" value={query} onChange={(event) => setQuery(event.target.value)} /></label></div>
-    <div className="catalog-summary"><span>{catalog.length} 款模板</span><span>同一篇内容，不同的阅读感受</span></div>
-    <div className="template-grid">{matches.map((template) => <article className="template-card" key={template.id} style={{ "--template-accent": template.accentColor } as CSSProperties}>
+    <h1 className="template-title">模板库</h1>
+    <div className="template-grid">{catalog.map((template) => <article className="template-card" key={template.id} style={{ "--template-accent": template.accentColor } as CSSProperties}>
       <div className="template-card-heading"><h2>{template.name}</h2>{template.id === defaultId && <span className="default-badge"><Check size={12} />默认</span>}</div>
-      <p className="template-description">{template.description}</p>
       <button className="template-preview" aria-label={`预览${template.name}`} onClick={() => setDetail(template.id)}><div aria-hidden inert className="template-preview-content" dangerouslySetInnerHTML={{ __html: previews.get(template.id) ?? "" }} /><span className="preview-open">查看完整排版 <ArrowUpRight size={15} /></span></button>
-      <div className="template-card-actions"><span>{currentId === template.id ? "当前文章使用中" : "WeDraft · 内置"}</span><button className="web-action" onClick={() => onChoose(template.id)}>设为默认并使用</button></div>
+      <div className="template-card-actions"><span>{currentId === template.id ? "当前使用" : ""}</span><button className="web-action" onClick={() => onChoose(template.id)}>设为默认并使用</button></div>
     </article>)}</div>
-    {!matches.length && <p className="empty-search">没有找到这个模板，试试“长文”或“科技”。</p>}
-    <section className="contribute-panel"><div><p className="section-kicker">让好排版不断生长</p><h2>每一种风格，都可以成为一款模板。</h2><p>模板与编辑器独立维护。未来开源后，你可以通过 GitHub 提交自己的作品，让更多人使用。</p></div><details><summary>模板如何加入这里</summary><p>提交模板样式、唯一 ID、名称与简介，并附上一份完整的效果预览。通过格式、内容保真和复制兼容性检查后，登记到模板目录，网页、CLI 和 MCP 就会同时获得这款模板。</p><p>当前展示的是随版本提供的内置模板；社区投稿入口将在仓库公开后启用。</p></details></section>
+    <button className="add-template" aria-label="添加模板" title="添加模板" onClick={() => setContributing(true)}><Plus size={26} /></button>
+    {contributing && <TemplateDetail name="添加模板" articlePreview={false} onClose={() => setContributing(false)}><p className="template-contribution-copy">Fork WeDraft 项目，设计并添加你的模板。欢迎提交 PR，让模板库更丰富。</p><a className="button primary" href="https://github.com/pafa/WeDraft" target="_blank" rel="noreferrer">前往 GitHub <ArrowUpRight size={16} /></a></TemplateDetail>}
     {selected && <TemplateDetail name={selected.name} onClose={() => setDetail(null)}><div className="template-detail-article" dangerouslySetInnerHTML={{ __html: previews.get(selected.id) ?? "" }} /><button className="button primary" onClick={() => onChoose(selected.id)}>设为默认并使用</button></TemplateDetail>}
   </main>;
 }
 
-function CopyBlock({ text, label }: { text: string; label: string }) {
+function CopyAction({ text, label }: { text: string; label: string }) {
   const [state, setState] = useState("");
   async function copyText() {
     try {
       if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
       await navigator.clipboard.writeText(text);
       setState("已复制");
-    } catch { setState("复制未成功，请选中文字复制"); }
+    } catch { setState("复制未成功，请展开或选中文字复制"); }
   }
-  return <div className="copy-block"><pre><code>{text}</code></pre><button className="web-action" onClick={() => void copyText()}><Copy size={15} />{label}</button><span role="status">{state}</span></div>;
+  return <div className="ai-copy-action"><button className="web-action" onClick={() => void copyText()}><Copy size={15} />{label}</button><span role="status">{state}</span></div>;
+}
+
+function CopyBlock({ text, label }: { text: string; label: string }) {
+  return <div className="copy-block"><pre><code>{text}</code></pre><CopyAction text={text} label={label} /></div>;
 }
 
 export function AiPage() {
+  const [path, setPath] = useState<"manual" | "automatic">("manual");
   const base = new URL(import.meta.env.BASE_URL, window.location.href).href.split("#")[0];
   const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(window.location.hostname);
   const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
   const command = `curl -fsSL ${quote(`${base}integrations/install.sh`)} | sh -s -- ${quote(`${base}integrations/`)}`;
-  const prompt = `请阅读 ${base}connect.md，为我安装 WeDraft 的 Skill 并接入本地 MCP。完成后列出可用模板，然后用内置示例生成排版预览和可编辑文章包。`;
-  return <main className="discovery-page ai-page">
+  const setupPrompt = `请阅读 ${base}connect.md，为我安装 WeDraft 的 Skill 并接入本地 MCP。完成后列出可用模板，并确认可以生成排版预览。`;
+  const taskPrompt = "用 WeDraft 的青岚模板排版上面的 Markdown，保留原文、链接和图片来源；给我可以复制富文本的排版预览。有阻断问题时先指出位置。";
+  const paths = [
+    { id: "manual" as const, title: "手工整理", caption: "文档格式杂，先让 AI 整理，再到网页调整。", icon: FileText },
+    { id: "automatic" as const, title: "自动排版", caption: "AI 里已经有 Markdown，一句话生成排版结果。", icon: Sparkles },
+  ];
+
+  return <main className="discovery-page ai-page ai-workflows">
     <a className="back-link" href="#/"><ArrowLeft size={16} />返回编辑</a>
-    <div className="page-heading"><div><p className="section-kicker">让排版进入你的 AI 工作流</p><h1>写完之后，交给 WeDraft。</h1><p>AI 帮你整理内容，WeDraft 负责准确排版。<br />同一套模板，贯穿对话、网页和可编辑文章包。</p></div><span className="ai-monogram" aria-hidden>W<span>↗</span></span></div>
-    <div className="ai-benefits"><section><span>01</span><h2>一句话完成排版</h2><p>让 AI 选模板、检查原稿并生成预览，保留你的文字、链接和图片来源。</p></section><section><span>02</span><h2>接着在网页里改</h2><p>AI 生成的文章包可直接拖进编辑页，修改正文、换模板，再复制排版。</p></section><section><span>03</span><h2>融入已有的流程</h2><p>把排版接在写作、资料整理或周报之后。用 MCP 调工具，用 Skill 告诉 AI 如何做好。</p></section></div>
-    <section className="connect-panel"><div className="connect-heading"><div><p className="section-kicker">安装一次，以后直接用</p><h2>把这句话告诉你的 AI</h2></div><span className="support-badge">Codex · macOS / Linux</span></div><p>在能执行本机命令的 Codex 中发送下面这句话。AI 会完成安装和接入；首次连接可能需要新开一次对话。</p><CopyBlock text={prompt} label="复制接入指令" />
-      {local && <p className="local-connect-note">这是本机预览地址，只适用于这台电脑上的 AI。公开部署后，这里会自动使用网站地址，可直接分享给其他人。</p>}
-      <details className="command-option"><summary>也可以在终端执行一条命令</summary><CopyBlock text={command} label="复制安装命令" /><p>自动准备运行环境、安装 Skill、登记本地 MCP。无需手工下载，也不修改系统 Node。安装文件位于用户目录；已有同名配置会被保留并提示处理。</p></details>
-    </section>
-    <section className="try-ai"><div><p className="section-kicker">接入后，直接这样说</p><h2>从一篇文章开始</h2></div><CopyBlock text="用 WeDraft 的青岚模板排版这篇文章。保留原文和来源，检查排版问题，给我网页预览与可编辑文章包。" label="复制示例" /><div className="flow-strip"><span>你的原稿</span><b>→</b><span>AI 调用 WeDraft</span><b>→</b><span>预览 + 文章包</span><b>→</b><a href="#/">网页继续编辑 ↗</a></div></section>
-    <section className="ai-faq"><h2>了解它怎样工作</h2><details><summary>Skill 和 MCP 分别做什么？</summary><p>Skill 是给 AI 的排版说明：保留什么、怎样检查、交付哪些文件。MCP 提供实际的模板查询、检查、排版和导出工具。这条安装命令会一起准备好两者。</p></details><details><summary>其他 AI 也能用吗？</summary><p>支持本地 stdio MCP 的客户端可以使用同一个服务。安装后会给出可复制的 command / args 配置。当前一键登记针对 Codex；纯网页聊天和只接受远程 MCP 地址的客户端暂不适用。</p></details><details><summary>会自动改文章或发布到微信吗？</summary><p>WeDraft 负责排版和检查，不会自动改写或发布。MCP 在你的电脑上运行，输出文件保存在本机；你使用的 AI 客户端如何处理对话和文章，取决于该客户端的设置。</p></details><details><summary>安装在哪里，如何管理？</summary><p>工具默认放在 ~/.local/share/wedraft，Skill 放在 ~/.agents/skills/format-with-wedraft，Codex 连接写入 ~/.codex/config.toml。安装重复执行时检查版本和已有配置，不覆盖其他连接或 Skill。文章导出到独立目录，不混入程序文件。</p></details></section>
+    <div className="page-heading"><div><p className="section-kicker">AI 帮忙，排版更轻松</p><h1>从原稿到微信，<br className="ai-title-break" />选一种顺手的方式。</h1><p>先用 AI 整理文档，或直接让 AI 调用 WeDraft。<br />两条路都保留原文，最后拿到可以粘贴到微信的排版。</p></div></div>
+    <div className="ai-path-switch" role="group" aria-label="选择排版方式">{paths.map(({ id, title, caption, icon: Icon }) => <button key={id} type="button" aria-label={title} aria-describedby={`ai-${id}-description`} aria-pressed={path === id} onClick={() => setPath(id)}><span className="ai-path-icon"><Icon size={20} /></span><span><strong>{title}</strong><small id={`ai-${id}-description`}>{caption}</small></span><ArrowRight className="ai-path-arrow" size={19} /></button>)}</div>
+
+    {path === "manual" ? <section className="ai-path-panel" id="ai-manual-path" aria-labelledby="ai-manual-title">
+      <div className="ai-path-heading"><div><p className="section-kicker">方式一 · 无需安装</p><h2 id="ai-manual-title">让 AI 整理，自己把关效果。</h2></div><span className="support-badge">适合你常用的 AI 对话</span></div>
+      <p className="ai-path-intro">Word、网页文字或其他格式的原稿，先交给 AI 转成 WeDraft 支持的 Markdown，再回到网页微调。</p>
+      <ol className="ai-workflow-steps"><li><span>01</span><div><h3>复制格式指令，连同原文发给 AI</h3><p>下面的指令与编辑器内的“复制 Markdown 规则”相同：只加排版标记，不改写、不删减、不补内容。</p></div></li><li><span>02</span><div><h3>把 AI 返回的 Markdown 粘回网页</h3><p>复制完整代码块里的原稿，在编辑器选择模板、检查图片来源，再按预览调整。</p></div></li><li><span>03</span><div><h3>点击“复制排版”，粘贴到微信</h3><p>复制的是带样式的正文。标题单独填写，粘贴后检查图片和手机效果。</p></div></li></ol>
+      <div className="ai-rules-card"><div><FileText size={20} /><div><h3>WeDraft Markdown 格式指令</h3><p>保留原文 · 保留来源 · 输出完整 Markdown</p></div></div><CopyAction text={MARKDOWN_RULES_PROMPT} label="复制 Markdown 格式指令" /><details className="ai-rules-details"><summary>查看完整指令</summary><pre>{MARKDOWN_RULES_PROMPT}</pre></details></div>
+      <div className="ai-next-step"><span>拿到 Markdown 之后，就可以开始排版。</span><a className="button primary" href="#/">打开网页编辑器 <ArrowRight size={16} /></a></div>
+    </section> : <section className="ai-path-panel" id="ai-automatic-path" aria-labelledby="ai-automatic-title">
+      <div className="ai-path-heading"><div><p className="section-kicker">方式二 · 安装一次，以后一句话</p><h2 id="ai-automatic-title">文章已经写好，直接让 AI 排版。</h2></div><span className="support-badge">本机 Agent · Codex 一键接入</span></div>
+      <p className="ai-path-intro">AI 里已有 Markdown 时，不必重新粘回编辑器。接入 WeDraft 后，AI 可以选模板、检查原稿，直接交付排版结果。</p>
+      <div className="connect-panel ai-setup-panel"><div className="connect-heading"><div><p className="section-kicker">第一次使用</p><h3>把这句话告诉你的 AI</h3></div><span className="support-badge">macOS / Linux</span></div><p>发给能执行本机命令的 Codex，自动安装 Skill 和本地 MCP，无需逐个下载文件。</p><CopyBlock text={setupPrompt} label="复制接入指令" />
+        <details className="command-option"><summary>也可以在终端执行一条命令</summary><CopyBlock text={command} label="复制安装命令" /><p>自动准备运行环境并保留已有配置，不修改系统 Node。正在运行的对话可能需要重新打开，才能加载新工具。</p></details>
+        {local && <p className="local-connect-note">当前是本机预览地址，只适用于这台电脑上的 AI。正式部署后，这里会自动使用网站地址。</p>}
+      </div>
+      <section className="ai-task-panel"><div className="ai-step-heading"><span>01</span><div><h3>以后排版，只要这一句话</h3><p>把它发在已有 Markdown 的对话里。模板名可以换成你喜欢的一款。</p></div></div><CopyBlock text={taskPrompt} label="复制排版指令" /></section>
+      <section className="ai-result-panel"><div className="ai-step-heading"><span>02</span><div><h3>打开结果，复制到微信</h3><p>打开 AI 交付的排版预览，点击“复制正文排版”，把富文本正文粘贴到公众号后台。想再调整时，再将文章包导入网页。</p></div></div><div className="ai-result-flow" aria-label="自动排版流程"><span>已有 Markdown</span><ArrowRight size={15} /><span>AI 调用 WeDraft</span><ArrowRight size={15} /><span>复制排版结果</span><ArrowRight size={15} /><span>粘贴微信</span></div></section>
+      <details className="ai-agent-note"><summary>让 Agent 继续完成复制、粘贴，可以吗？</summary><p>如果 AI 客户端还具备浏览器和剪贴板能力，它可以在获得你的授权后继续操作预览页和微信后台。WeDraft 的 MCP 本身只负责排版、检查与文件导出；复制、粘贴取决于宿主能力，不会自动发布文章。</p></details>
+    </section>}
+
+    <section className="ai-faq"><h2>还有几个小问题</h2><details><summary>手工整理也需要装 Skill 或 MCP 吗？</summary><p>不需要。复制格式指令给你常用的 AI，拿到 Markdown 后回网页即可。只有希望 AI 直接调用排版工具时，才需要接入 Skill / MCP。</p></details><details><summary>Skill 和 MCP 分别做什么？</summary><p>Skill 告诉 AI 怎样保留原文、检查问题和交付结果；MCP 提供查询模板、检查、渲染和导出的工具。一条安装命令会同时准备两者，Skill 也可以调用 CLI 完成任务。</p></details><details><summary>所有 AI 都能自动接入吗？</summary><p>当前一键配置面向 macOS / Linux 上的 Codex。其他支持本地 stdio MCP 的客户端可使用安装目录里的连接配置；纯网页聊天和只接受远程 MCP 地址的客户端不能直接连接此版本，但可以使用手工整理方式。</p></details><details><summary>排版结果会上传或自动发布吗？</summary><p>WeDraft 在本机处理，生成的文件保存在本机，不会自动改写或发布。你所用 AI 如何处理原稿与对话，取决于该客户端的设置。微信中粘贴后的图片、字号和最终发布仍需检查。</p></details><details><summary>安装在哪里，怎样管理？</summary><p>工具默认放在 ~/.local/share/wedraft，Skill 放在 ~/.agents/skills/format-with-wedraft，Codex 连接写入 ~/.codex/config.toml。已有同名配置或本地修改会被保留并提示处理；默认导出位置是 ~/Documents/WeDraft Exports/。</p></details></section>
   </main>;
 }

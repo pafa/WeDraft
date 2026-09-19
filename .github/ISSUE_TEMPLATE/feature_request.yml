@@ -1,0 +1,32 @@
+name: 功能建议
+description: 描述你要完成的任务和希望改善的使用方式。
+title: "[建议] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先搜索已有建议。只用最小中性示例说明场景，不贴私人文章、客户内容、凭据、个人信息或真实草稿文章包。新模板请使用“提交模板”表单。
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 你正在完成什么任务？
+      placeholder: 我通常先……再……，目前在……这一步遇到困难。
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: 希望发生什么？
+      description: 描述操作后的结果，可附一个中性例子；不需要先设计实现方案。
+    validations:
+      required: true
+  - type: textarea
+    id: current_workaround
+    attributes:
+      label: 目前怎样处理？（可选）
+      description: 现有功能、手工步骤或替代办法有什么不足？
+  - type: textarea
+    id: scope
+    attributes:
+      label: 适用范围与边界（可选）
+      description: 例如网页、桌面、AI 接入、某类文章；也可说明哪些现有行为需要保留。

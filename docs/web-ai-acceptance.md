@@ -4,29 +4,29 @@
 
 ## 实际通过
 
-- `./scripts/verify`：仓库约束、类型检查、215 项测试、Mac 前端构建、独立网页静态构建、CLI / MCP 构建。
+- `./scripts/verify`：仓库约束、类型检查、216 项测试、Mac 前端构建、独立网页静态构建、CLI / MCP 构建。
 - 核心与文章包：原稿、CRLF 与显式 BOM 保留，图片与元数据往返，正文 HTML 与纯文本，未知版本/模板、缺图、越界路径、不支持语法和无效 UTF-8 的错误路径。
 - CLI：实际写出预览、文章包和报告，拒绝覆盖已有目录，显式图片根目录与越界符号链接检查。
 - MCP：官方 SDK 客户端连接真实 stdio 子进程，发现工具、校验输入、渲染与导出；默认无写文件工具，配置目录后才能导出。
 - `node scripts/smoke-web.mjs`：真实 Chrome，MCP 生成含图片的文章包 → 网页导入 → 编辑/撤回/重做 → 预览微调写回 → 添加图片来源 → 切模板 → 导出。
-- 同一脚本也针对构建后的静态网页运行：真实 HTML + 纯文本剪贴板、浏览器 contenteditable 粘贴、IndexedDB 刷新恢复、错误导入不覆盖原稿、缺图阻止复制、文章包重新打开。
+- 同一脚本也针对构建后的静态网页运行：真实 HTML + 纯文本剪贴板、浏览器 contenteditable 粘贴、刷新清空、模板 Cookie 保留、旧 IndexedDB 数据不被读取或更改、错误导入不覆盖原稿、缺图阻止复制、文章包重新打开。
 - 1440×1000、390×844、320×740 的编辑器、模板库和 AI 页面已实际检查。手机屏幕固定逻辑尺寸，完整机身等比缩放并支持 100%；状态栏在窄屏保留。中性本地图片样稿没有页面、控制台错误或站外请求。
-- 新版 `smoke-web` 的 15 项真实端到端检查通过：首次示例焦点不清空、新建空白、七模板与 Cookie 一年、跨标签默认值与已有草稿的模板隔离、页面往返、设备切换后预览编辑写回。
+- 新版 `smoke-web` 的 16 项真实端到端检查通过：含图灰色示例点击即开始输入、新建空白、七模板与 Cookie 一年、跨标签默认值与导入文章包的模板隔离、页面往返、设备切换后预览编辑写回。
 - 一键安装在隔离目录验证：真实 shell 下载与安装、自包含 CLI/MCP、实际 MCP 导出文章包与 CLI 正文一致、内置示例、配置备份、重复安装、冲突和完整性失败路径。测试没有触碰真实用户的 Skill 或 Codex 配置。
-- 最终样式构建的定向检查通过：22 个可编辑节点非悬停时无轮廓；模板弹窗关闭、Escape 与焦点恢复；剪贴板 API 不可用时有反馈且无页面异常。
+- 此前样式候选的定向检查通过：22 个可编辑节点非悬停时无轮廓；模板弹窗关闭、Escape 与焦点恢复；剪贴板 API 不可用时有反馈且无页面异常。
 - 配套 Skill 使用官方 `quick_validate.py` 验证通过。
 
-本轮测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
+最新检查记录在 `/private/tmp/wedraft-release-verify.log`、`/private/tmp/wedraft-final-web-qa/`，AI 可复制预览验证在 `/private/tmp/wedraft-ai-copy-qa-20260919/`，无 Node 冷启动记录在 `/private/tmp/wedraft-cold-start.EqvRXh/report.json`。此前测试证据在 `/private/tmp/wedraft-typography-20260919/verify.log`、`qa-static/` 和 `/private/tmp/wedraft-web-styles-qa/`；早期候选记录仍保留在忽略目录 `artifacts/web-ai-first-version/`。不将测试导出的文章包作为源码上传。README 使用内置中性样稿的真实截图。
 
 ## 明确边界
 
 - 没有将候选合并到 main、公开仓库、部署公网、发布 npm 包或安装全局 Skill / MCP。
 - 没有更改 Rust、Tauri 配置、签名或包装行为；没有重建 Mac 原生安装包，也没有替换已安装 App。
 - 未实测微信后台、Safari / Firefox、全部 AI 客户端或实际手机硬件。浏览器粘贴成功不能替代微信验收。
-- 无 Node 环境的自动下载分支已实际启动，官方校验列表可取得；完整运行时下载受当前网络速度影响，尚未完成端到端现场验收。已通过的私有 runtime 调用测试不能替代这项联网验证。
+- macOS Apple Silicon 的无 Node 冷启动已完成：从官方源下载 Node 24.21.0、核对 SHA-256，在隔离目录安装并实际执行 CLI 与 MCP 导出。未实测 Linux 冷启动。
 - MCP 使用真实协议客户端验收，不宣称已经验证模型在所有宿主中的自动工具选择。
 - 静态构建有单 JS chunk 超过 500 kB 的体积提示（压缩传输约 225 kB）；构建成功，首版尚未做代码拆分。
-- 图片保留原字节，含图工具结果可能较大；优先使用 CLI 文件输入和文章包导出。浏览器存储空间由浏览器管理，失败时需导出文件保存。
+- 图片保留原字节，含图工具结果可能较大；优先使用 CLI 文件输入和文章包导出。网页只在页面内存中暂存，保留结果需导出文件。
 
 ## 可复现方式
 

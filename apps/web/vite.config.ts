@@ -2,6 +2,8 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+// @ts-expect-error Bundler-owned notice collector is an executable ES module.
+import { thirdPartyNotices } from "../../scripts/third-party-notices.mjs";
 // @ts-expect-error The shared build helper is an executable ES module.
 import { buildIntegrations, integrationAssets, integrationDirectory } from "../../scripts/build-integrations.mjs";
 
@@ -23,6 +25,10 @@ function integrations(): Plugin {
       });
     },
     async generateBundle() {
+      this.emitFile({ type: "asset", fileName: "LICENSE", source: await readFile(join(integrationDirectory, "LICENSE")) });
+      const notices = await thirdPartyNotices([...this.getModuleIds()], join(integrationDirectory, "../.."));
+      this.emitFile({ type: "asset", fileName: "THIRD-PARTY-NOTICES.txt", source: notices.text });
+      this.emitFile({ type: "asset", fileName: "dependencies.json", source: JSON.stringify(notices.inventory, null, 2) + "\n" });
       for (const name of [...integrationAssets, "connect.md"]) {
         this.emitFile({ type: "asset", fileName: name === "connect.md" ? name : `integrations/${name}`, source: await readFile(join(integrationDirectory, name)) });
       }

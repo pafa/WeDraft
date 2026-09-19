@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
+import { PREVIEW_COPY_SCRIPT, PREVIEW_COPY_CSP_HASH } from "../src/preview-copy.js";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { createPreviewHtml, decodeBase64, encodeBase64, exportArticleBundle, importArticleBundle, renderArticle, type ArticleAsset } from "../src/index.js";
 
@@ -57,6 +59,19 @@ describe("shared article pipeline", () => {
     expect(html).toContain("&lt;svg/onload=alert(1)&gt;");
     expect(html).not.toContain("<svg");
     expect(html).toContain("Content-Security-Policy");
+  });
+  it("allows only the fixed copy script and keeps article text outside executable code", () => {
+    expect(PREVIEW_COPY_CSP_HASH).toBe(`sha256-${createHash("sha256").update(PREVIEW_COPY_SCRIPT).digest("base64")}`);
+    const result = renderArticle({ markdown: '标题\n\n正文 **重点**\n\n```\n</script><script>alert(1)</script>\n```' });
+    const html = createPreviewHtml(result);
+    expect(html.match(/<script>/g)).toHaveLength(1);
+    expect(html).toContain(`script-src '${PREVIEW_COPY_CSP_HASH}'`);
+    expect(html).toContain(`<section id="wedraft-body">${result.html}</section>`);
+    expect(html).not.toContain('id="wedraft-copy" disabled');
+  });
+  it("disables the copy action for an incomplete article", () => {
+    const html = createPreviewHtml(renderArticle({ markdown: '标题\n\n![图](missing.png)' }));
+    expect(html).toContain('id="wedraft-copy" disabled');
   });
 });
 
