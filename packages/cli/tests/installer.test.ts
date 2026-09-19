@@ -1,25 +1,34 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createServer } from "node:http";
 import { execFileSync, execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { mkdtemp, readFile, writeFile, mkdir, readdir, rm, realpath } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, mkdir, readdir, rm, realpath, copyFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { importArticleBundle } from "@wedraft/core";
 // @ts-expect-error The installation program is also an executable ES module.
-import { install } from "../../../integrations/installer.mjs";
+import { install, status, upgrade, uninstall } from "../../../integrations/installer.mjs";
+
+vi.mock("node:fs/promises", async importOriginal => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, writeFile: vi.fn(actual.writeFile) };
+});
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const run = promisify(execFile);
 let workspace: string;
 let baseUrl: string;
 let corrupt = false;
+let requests = 0;
+const overrides = new Map<string, Buffer>();
 const server = createServer(async (request, response) => {
   try {
+    requests += 1;
     const name = request.url?.slice(1) ?? "";
     if (!/^[a-zA-Z0-9_.-]+$/.test(name)) { response.writeHead(404).end(); return; }
-    let bytes = await readFile(join(root, "artifacts/integrations", name));
+    let bytes = overrides.get(name) ?? await readFile(join(root, "artifacts/integrations", name));
     if (corrupt && name === "cli.mjs") bytes = Buffer.from("tampered");
     response.end(bytes);
   } catch { response.writeHead(404).end(); }
@@ -161,5 +170,175 @@ describe("one-command installation", () => {
     expect(await readFile(options.configFile, "utf8")).toBe('model = "unchanged"\n');
     expect(await readdir(join(workspace, "integrity"))).toEqual(["config.toml"]);
     await expect(install({ ...options, baseUrl: "http://example.com/integrations/" })).rejects.toThrow("HTTPS");
+  });
+});
+
+describe("installation lifecycle", () => {
+  it("records the exact build identity and offers offline status from the installed manager", async () => {
+    const options = await paths("status");
+    const result = await install(options);
+    const manifest = JSON.parse(await readFile(join(root, "artifacts/integrations/manifest.json"), "utf8"));
+    const config = await readFile(options.configFile, "utf8");
+    const requestCount = requests;
+    const response = await run("sh", [join(options.installDir, "manage.sh"), "status"], { cwd: workspace });
+    const current = JSON.parse(response.stdout);
+    expect(current.installed).toBe(true);
+    expect(current.release).toEqual({ version: manifest.version, sourceCommit: manifest.sourceCommit, sourceDirty: manifest.sourceDirty });
+    expect(current.release.sourceCommit).toMatch(/^[a-f0-9]{40}$/);
+    expect(current.paths).toEqual({ installDir: options.installDir, skillDir: options.skillDir, configFile: options.configFile, outputDir: options.outputDir });
+    expect(current.issues).toEqual([]);
+    expect(result.manageCommand).toContain("manage.sh");
+    expect(requests).toBe(requestCount);
+    expect(await readFile(options.configFile, "utf8")).toBe(config);
+  });
+
+  it("upgrades from the recorded source and paths while preserving unrelated MCPs and exports", async () => {
+    const options = await paths("upgrade");
+    await install(options);
+    const unrelated = '\n[mcp_servers.other]\ncommand = "keep-me"\n';
+    const config = await readFile(options.configFile, "utf8") + unrelated;
+    await writeFile(options.configFile, config);
+    await writeFile(join(options.outputDir, "my-article.md"), "已有原稿");
+    const sample = Buffer.from("更新后的内置样稿\n\n保留内容。\n");
+    const manifest = JSON.parse(await readFile(join(root, "artifacts/integrations/manifest.json"), "utf8"));
+    manifest.sourceCommit = "b".repeat(40);
+    manifest.sourceDirty = false;
+    manifest.files["sample.md"] = { sha256: createHash("sha256").update(sample).digest("hex"), size: sample.length };
+    overrides.set("sample.md", sample);
+    overrides.set("manifest.json", Buffer.from(JSON.stringify(manifest)));
+    try {
+      await run("sh", [join(options.installDir, "manage.sh"), "upgrade"], { cwd: workspace });
+      expect((await status({ installDir: options.installDir })).release.sourceCommit).toBe("b".repeat(40));
+      expect(await readFile(join(options.installDir, "sample.md"))).toEqual(sample);
+      expect(await readFile(options.configFile, "utf8")).toBe(config);
+      expect(await readFile(join(options.outputDir, "my-article.md"), "utf8")).toBe("已有原稿");
+    } finally { overrides.clear(); }
+  });
+
+  it("uninstalls only owned files, retains extra files and article exports, and backs up configuration", async () => {
+    const options = await paths("uninstall");
+    const unrelated = '[mcp_servers.other]\ncommand = "keep-me"\n';
+    await writeFile(options.configFile, unrelated);
+    await install(options);
+    const config = await readFile(options.configFile, "utf8");
+    await writeFile(join(options.outputDir, "article.wedraft.zip"), "export fixture");
+    await writeFile(join(options.installDir, "personal.txt"), "keep tool note");
+    await writeFile(join(options.skillDir, "my-rules.md"), "keep added rules");
+    const response = await run("sh", [join(options.installDir, "manage.sh"), "uninstall"], { cwd: workspace });
+    const result = JSON.parse(response.stdout);
+    expect(result.uninstalled).toBe(true);
+    expect(result.exportsPreserved).toBe(true);
+    expect(result.retainedDirectories.sort()).toEqual([options.installDir, options.skillDir].sort());
+    expect(await readFile(result.configBackup, "utf8")).toBe(config);
+    expect((await readFile(options.configFile, "utf8")).trim()).toBe(unrelated.trim());
+    expect(await readdir(options.installDir)).toEqual(["personal.txt"]);
+    expect(await readdir(options.skillDir)).toEqual(["my-rules.md"]);
+    expect(await readFile(join(options.outputDir, "article.wedraft.zip"), "utf8")).toBe("export fixture");
+  });
+
+  it.each(["tools", "skill", "config"])("preserves all files when %s has local edits", async (edited) => {
+    const options = await paths(`edited-${edited}`);
+    await install(options);
+    const target = edited === "tools" ? join(options.installDir, "sample.md") : edited === "skill" ? join(options.skillDir, "SKILL.md") : options.configFile;
+    const content = await readFile(target, "utf8") + (edited === "config" ? "extra_setting = true\n" : "\nlocal edits\n");
+    await writeFile(target, content);
+    const config = await readFile(options.configFile, "utf8");
+    if (edited !== "config") await expect(upgrade({ installDir: options.installDir })).rejects.toThrow(/Locally edited/);
+    await expect(uninstall({ installDir: options.installDir })).rejects.toThrow(/Locally edited|Settings were added/);
+    expect((await status({ installDir: options.installDir })).issues.length).toBeGreaterThan(0);
+    expect(await readFile(target, "utf8")).toBe(content);
+    expect(await readFile(options.configFile, "utf8")).toBe(config);
+    expect(await readdir(options.installDir)).toContain("cli.mjs");
+    expect(await readdir(options.skillDir)).toContain("SKILL.md");
+  });
+
+  it("reports legacy installs without guessing version or custom paths, then upgrades their records on reinstallation", async () => {
+    const options = await paths("legacy");
+    await install(options);
+    for (const directory of [options.installDir, options.skillDir]) {
+      const path = join(directory, ".wedraft-install.json");
+      const record = JSON.parse(await readFile(path, "utf8"));
+      delete record.paths; delete record.release;
+      await writeFile(path, JSON.stringify(record));
+    }
+    expect(await status({ installDir: options.installDir })).toMatchObject({ installed: true, legacy: true, release: null });
+    await expect(uninstall({ installDir: options.installDir })).rejects.toThrow("Legacy installation");
+    await expect(upgrade({ installDir: options.installDir })).rejects.toThrow("Legacy installation");
+    await install(options);
+    expect((await status({ installDir: options.installDir })).legacy).toBe(false);
+    await uninstall({ installDir: options.installDir });
+    expect(await status({ installDir: options.installDir })).toEqual({ installed: false, installDir: options.installDir });
+  });
+
+  it("does not redirect management to another configuration or Skill directory", async () => {
+    const options = await paths("management-paths");
+    await install(options);
+    await expect(uninstall({ installDir: options.installDir, configFile: join(workspace, "foreign.toml") })).rejects.toThrow("paths differ");
+    await expect(upgrade({ installDir: options.installDir, skillDir: join(workspace, "foreign-skill") })).rejects.toThrow("paths differ");
+    expect((await status({ installDir: options.installDir })).issues).toEqual([]);
+  });
+
+  it("rolls back tool and Skill writes when the final configuration write fails", async () => {
+    const options = await paths("rollback");
+    // This basename fits the filesystem limit; the atomic temporary filename does not.
+    options.configFile = join(workspace, "rollback", `${"c".repeat(230)}.toml`);
+    await expect(install(options)).rejects.toThrow(/ENAMETOOLONG/);
+    expect(await readdir(options.installDir)).toEqual([]);
+    expect(await readdir(options.skillDir)).toEqual([]);
+    expect(await status({ installDir: options.installDir })).toEqual({ installed: false, installDir: options.installDir });
+  });
+
+  it("restores an existing installation and its records when an upgrade fails at the final config write", async () => {
+    const options = await paths("upgrade-rollback");
+    // A different initial runtime makes the upgrade update the MCP command too.
+    const initialRuntime = join(workspace, "initial-node");
+    await copyFile(process.execPath, initialRuntime);
+    await run(initialRuntime, [join(root, "integrations/installer.mjs"), "--base-url", baseUrl, "--install-dir", options.installDir, "--skill-dir", options.skillDir, "--config-file", options.configFile, "--output-dir", options.outputDir]);
+    const originalConfig = await readFile(options.configFile);
+    expect(originalConfig.toString()).toContain(initialRuntime);
+    const originals = new Map<string, Buffer>([[options.configFile, originalConfig]]);
+    for (const directory of [options.installDir, options.skillDir]) {
+      for (const name of await readdir(directory)) originals.set(join(directory, name), await readFile(join(directory, name)));
+    }
+    const sample = Buffer.from("New sample that must be rolled back.\n");
+    const manifest = JSON.parse(await readFile(join(root, "artifacts/integrations/manifest.json"), "utf8"));
+    manifest.sourceCommit = "c".repeat(40);
+    manifest.files["sample.md"] = { sha256: createHash("sha256").update(sample).digest("hex"), size: sample.length };
+    overrides.set("sample.md", sample);
+    overrides.set("manifest.json", Buffer.from(JSON.stringify(manifest)));
+    const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    let failed = false;
+    let stagedCommit: string | undefined;
+    let stagedSample: Buffer | undefined;
+    vi.mocked(writeFile).mockImplementation(async (...args) => {
+      if (!failed && String(args[0]).startsWith(`${options.configFile}.`) && String(args[0]).endsWith(".tmp")) {
+        failed = true;
+        stagedCommit = JSON.parse(await readFile(join(options.installDir, ".wedraft-install.json"), "utf8")).release.sourceCommit;
+        stagedSample = await readFile(join(options.installDir, "sample.md"));
+        throw Object.assign(new Error("Injected final config write failure"), { code: "EIO" });
+      }
+      return actual.writeFile(...args);
+    });
+    try {
+      await expect(upgrade({ installDir: options.installDir })).rejects.toThrow("Injected final config write failure");
+      expect(stagedCommit).toBe("c".repeat(40));
+      expect(stagedSample).toEqual(sample);
+      for (const [path, bytes] of originals) expect(await readFile(path), path).toEqual(bytes);
+      expect((await status({ installDir: options.installDir })).issues).toEqual([]);
+    } finally { vi.mocked(writeFile).mockImplementation(actual.writeFile); overrides.clear(); }
+  }, 20_000);
+
+  it("preserves an installation when a target source lacks management support", async () => {
+    const options = await paths("old-source");
+    await install(options);
+    const config = await readFile(options.configFile, "utf8");
+    const record = await readFile(join(options.installDir, ".wedraft-install.json"), "utf8");
+    const manifest = JSON.parse(await readFile(join(root, "artifacts/integrations/manifest.json"), "utf8"));
+    delete manifest.managementVersion;
+    overrides.set("manifest.json", Buffer.from(JSON.stringify(manifest)));
+    try { await expect(upgrade({ installDir: options.installDir })).rejects.toThrow("compatible installation management"); }
+    finally { overrides.clear(); }
+    expect(await readFile(options.configFile, "utf8")).toBe(config);
+    expect(await readFile(join(options.installDir, ".wedraft-install.json"), "utf8")).toBe(record);
   });
 });

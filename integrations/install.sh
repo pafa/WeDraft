@@ -20,7 +20,7 @@ wedraft_fetch "${wedraft_base}installer.mjs" "$wedraft_tmp/installer.mjs"
 wedraft_fetch "${wedraft_base}installer.sha256" "$wedraft_tmp/installer.sha256"
 (cd "$wedraft_tmp" && wedraft_check installer.sha256)
 wedraft_node=$(command -v node || true)
-if [ -z "$wedraft_node" ] || ! "$wedraft_node" -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)' >/dev/null 2>&1; then
+if [ -z "$wedraft_node" ] || ! "$wedraft_node" -e 'process.exit(((v) => v[0] > 22 || (v[0] === 22 && v[1] >= 12))(process.versions.node.split(".").map(Number)) ? 0 : 1)' >/dev/null 2>&1; then
   case "$(uname -s)" in Darwin) wedraft_os=darwin ;; Linux) wedraft_os=linux ;; *) echo 'Automatic setup currently supports macOS and Linux.' >&2; exit 1 ;; esac
   case "$(uname -m)" in arm64|aarch64) wedraft_arch=arm64 ;; x86_64|amd64) wedraft_arch=x64 ;; *) echo 'Unsupported CPU architecture.' >&2; exit 1 ;; esac
   wedraft_compression=tar.gz

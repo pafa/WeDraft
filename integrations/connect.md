@@ -10,11 +10,23 @@ When the user asks to connect WeDraft using this page, resolve `integrations/` r
 curl -fsSL 'RESOLVED_INTEGRATIONS_URL/install.sh' | sh -s -- 'RESOLVED_INTEGRATIONS_URL/'
 ```
 
-This installs a self-contained CLI, the `format-with-wedraft` skill, and a local stdio MCP entry named `wedraft` for Codex. It prepares a private Node 24 runtime if Node 22+ is unavailable; no sudo, pnpm or source checkout is needed. It preserves unrelated configuration and stops on conflicting existing WeDraft files. Installation writes only the user's WeDraft tools, skill and Codex configuration (backed up before changing), plus an output directory. Respect the host's tool approvals. Do not pretend to install if you cannot run commands on the user's computer.
+This installs a self-contained CLI, the `format-with-wedraft` skill, and a local stdio MCP entry named `wedraft` for Codex. It prepares a private Node 24 runtime if Node 22.12+ is unavailable; no sudo, pnpm or source checkout is needed. It preserves unrelated configuration and stops on conflicting existing WeDraft files. Installation writes only the user's WeDraft tools, skill and Codex configuration (backed up before changing), plus an output directory. Respect the host's tool approvals. Do not pretend to install if you cannot run commands on the user's computer.
 
 After installation, use newly available MCP tools, or immediately use the CLI command printed by the installer. An already-running AI conversation may need to reload its tools; the CLI works immediately. The installed Skill includes the exact executable paths. Other clients can use the generated `mcp-client.json` command/args; automatic registration currently targets Codex only.
 
 The installer also includes `sample.md` beside the CLI. For a first-run check, list templates, then use that exact bundled example to generate a preview and editable bundle. The installed Skill gives the precise sample path. Do not invent or fetch a different article.
+
+## Check, update, or remove an installation
+
+Use the `Manage` command printed by the installer. With the default location:
+
+```sh
+sh "$HOME/.local/share/wedraft/manage.sh" status
+```
+
+`status` is offline and read-only: it reports the installed tool version, source commit, build dirty state, recorded paths and integrity issues. Run `upgrade` instead of `status` only when the user asks to update; it downloads from the installation's recorded source and preserves unrelated MCP entries and exports. Run `uninstall` only when the user asks to remove WeDraft; it removes verified owned files and the exact managed Codex block, backs up configuration, and preserves exported articles and extra files. Local edits stop the operation. Reload the AI conversation after updating or uninstalling so the host refreshes its running tools.
+
+Older installations without `manage.sh` or recorded paths need the original installation command rerun with the original custom paths. Never guess paths or erase ownership records to bypass conflicts. Version `0.1.0` may cover multiple commits; compare the recorded source commit as well as the version string.
 
 ## Start using it
 
