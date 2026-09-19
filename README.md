@@ -8,7 +8,7 @@
 
 WeDraft 提供网页版、CLI、本地 MCP 与 Skill，并保留原有 Mac 应用。你可以让 AI 整理 Markdown 后回网页调整，也可以直接让已接入 WeDraft 的 AI 为 Markdown 排版，打开结果复制正文。
 
-**发布准备中。** 网页与 AI 工具集候选为 `0.1.0`，正式网站已确定为 `https://wedraft.xiaoha.org`；发布时将现有 `pafa/WeDraft` 仓库改为公开。采用 [MIT](LICENSE)，当前尚未部署或改变仓库可见性。
+**公开测试版 `0.1.0`。** [打开网页版](https://wedraft.xiaoha.org) · [接入 AI](https://wedraft.xiaoha.org/#/ai)。仓库已采用 [MIT](LICENSE) 开源；站点部署、验证进度与限制见[首发记录](docs/releases/web-0.1.0.md)。真实微信环境尚未完成验收。
 
 [网页使用](docs/web-guide.md) · [AI 两条使用流程](docs/ai-integration.md) · [模板贡献](docs/templates.md) · [发布与部署材料](docs/deployment.md)
 
@@ -18,13 +18,13 @@ WeDraft 提供网页版、CLI、本地 MCP 与 Skill，并保留原有 Mac 应�
 
 更新日期：`2026.08.26`
 
-**Apple Silicon macOS · 本地存储 · 两套排版模板 · 私有源码备份**
+**Apple Silicon macOS · 本地存储 · 两套排版模板 · 开源源码**
 
-## 网页与 AI 初版（开发候选）
+## 网页与 AI 初版（公开测试版）
 
 同一套排版核心现在提供独立网页、CLI 和本地 MCP，并附带配套 Skill。可在网页手工排版，也可让 AI 生成预览和 `.wedraft.zip` 文章包，再导入网页继续编辑。
 
-工具集开发版本为 `0.1.0`；上方 `1.1.2` 是现有 Mac 应用基线，本次没有发布或替换 Mac 安装包。仓库仍是私有源码备份，在线演示、公开仓库及 npm 包尚未发布。
+网页与 AI 工具集版本为 `0.1.0`；上方 `1.1.2` 是现有 Mac 应用基线，本次没有发布或替换 Mac 安装包。CLI / MCP 随静态网站提供，未发布 npm 包。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -80,7 +80,7 @@ node packages/cli/dist/cli.mjs --help
 
 ## 运行与构建
 
-主要使用形态是 **Apple Silicon Mac 桌面应用**。本仓库只备份源码，不在 GitHub 提供安装包下载或自动发布。当前构建使用 ad-hoc 签名，未做 Developer ID 公证。
+原有桌面应用面向 **Apple Silicon Mac**。仓库已开源，但不在 GitHub 提供 Mac 安装包下载或自动发布。当前构建使用 ad-hoc 签名，未做 Developer ID 公证。
 
 从源码运行需要 Node.js、pnpm、Rust 和 Xcode Command Line Tools。工具链版本分别以 `.node-version`、`package.json` 的 `packageManager` 和 `rust-toolchain.toml` 为准。
 
@@ -113,7 +113,7 @@ pnpm dev
 
 ## 主线与文档
 
-**`main` 是本项目唯一的维护主线。** 本地完成开发和验证，任务分支通过 PR 审阅并合入 `main`。每个 PR 注明变更、验证和限制；当前仓库仍为私有，公开与部署另行确认。
+**`main` 是本项目唯一的维护主线。** 本地完成开发和验证，任务分支通过 PR 审阅并合入 `main`。每个 PR 注明变更、验证和限制。仓库现已公开，后续合并与部署仍分别获得维护者批准。
 
 | 文档 | 内容 |
 | --- | --- |
