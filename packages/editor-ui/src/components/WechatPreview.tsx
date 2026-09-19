@@ -594,7 +594,15 @@ export function WechatPreview({
       // Commit the current block ourselves, then restore focus with
       // preventScroll after React has rendered the updated Markdown.
       event.preventDefault();
+      const nextTarget = pendingEditTargetRef.current;
       activeTarget.blur();
+      if (!pendingEditTargetRef.current) {
+        // An unchanged block produces no Markdown render to restore focus from.
+        const article = articleRef.current;
+        const top = article?.scrollTop ?? 0;
+        focusEditableAtOffset(target, nextTarget.caretOffset);
+        if (article) article.scrollTop = top;
+      }
     }
   };
 
@@ -677,6 +685,9 @@ export function WechatPreview({
   };
 
   const onPreviewKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    // Enter/Escape belong to the IME until composition finishes. Safari can
+    // report its confirming key with keyCode 229 after isComposing turns false.
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
     const target = (event.target as Element).closest<HTMLElement>(
       "[data-wedraft-edit-kind]",
     );

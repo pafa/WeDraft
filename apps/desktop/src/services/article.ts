@@ -6,6 +6,8 @@ import {
   type ArticleSourceRange,
 } from "@wedraft/article-parser";
 import type { ArticleDocument } from "@wedraft/shared-types";
+import { validateMarkdownSyntax, type LocatedIssue } from "@wedraft/core";
+import { validateArticle } from "@wedraft/validation";
 import {
   getTemplateById,
   renderWechatHtml,
@@ -28,8 +30,10 @@ export function buildArticle(input: {
   document: ArticleDocument;
   html: string;
   sourceMap: ArticleSourceRange[];
+  issues: LocatedIssue[];
 } {
   const parsed = parseArticleWithSourceMap(input.markdown, {
+    contentType: "markdown",
     author: input.author,
     digest: input.digest,
     ...(input.sourceUrl ? { sourceUrl: input.sourceUrl } : {}),
@@ -51,6 +55,17 @@ export function buildArticle(input: {
       }
     }
   }
+  const issues: LocatedIssue[] = [
+    ...validateArticle({ document }),
+    ...validateMarkdownSyntax(input.markdown).map((issue) => {
+      const range = parsed.sourceMap.find((candidate) =>
+        issue.startLine !== undefined &&
+        candidate.startLine <= issue.startLine &&
+        candidate.endLine >= issue.startLine,
+      );
+      return { ...issue, ...(range ? { blockIndex: range.blockIndex } : {}) };
+    }),
+  ];
   return {
     document,
     html: renderWechatHtml(
@@ -58,5 +73,6 @@ export function buildArticle(input: {
       getTemplateById(input.templateId ?? "default-business"),
     ),
     sourceMap: parsed.sourceMap,
+    issues,
   };
 }

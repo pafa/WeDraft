@@ -23,7 +23,7 @@ export const articleInputSchema = z.strictObject({
   templateVersion: z.string().max(80).optional(),
   author: z.string().max(100).default(""),
   digest: z.string().max(1000).default(""),
-  sourceUrl: z.union([z.literal(""), z.url().refine((value) => /^https?:\/\//i.test(value))]).default(""),
+  sourceUrl: z.union([z.literal(""), z.url().max(4000).refine((value) => /^https?:\/\//i.test(value))]).default(""),
   assets: z.array(assetSchema).max(MAX_ASSETS).default([]),
 });
 export type ArticleInput = z.input<typeof articleInputSchema>;
@@ -44,7 +44,7 @@ type SyntaxNode = {
   children?: SyntaxNode[]; position?: { start: { line: number }; end: { line: number } };
 };
 
-function unsupportedMarkdown(markdown: string): LocatedIssue[] {
+export function validateMarkdownSyntax(markdown: string): LocatedIssue[] {
   const root = unified().use(remarkParse).use(remarkGfm).parse(markdown) as SyntaxNode;
   const issues: LocatedIssue[] = [];
   const visit = (node: SyntaxNode, parents: string[]) => {
@@ -59,8 +59,8 @@ function unsupportedMarkdown(markdown: string): LocatedIssue[] {
       message = "暂不支持任务列表或包含多个区块的列表项，请改为普通列表。";
     } else if (node.type === "blockquote" && (node.children?.length !== 1 || node.children[0]?.type !== "paragraph")) {
       message = "引用暂只支持单个正文段落，请把列表、代码或多段内容移到引用之外。";
-    } else if (node.type === "image" && (parents.includes("list") || parents.includes("blockquote"))) {
-      message = "图片需要单独放在正文段落中，不能嵌入列表或引用。";
+    } else if (node.type === "image" && (parents.length !== 2 || parents[0] !== "root" || parents[1] !== "paragraph")) {
+      message = "图片需要单独放在正文段落中，不能嵌入链接、标题、表格、列表、引用或文字格式中。";
     } else if (node.type === "paragraph" && node.children?.some((child) => child.type === "image") &&
       node.children.some((child) => child.type !== "image")) {
       message = "图片请独占一段，避免图片与同行文字的顺序改变。";
@@ -113,7 +113,7 @@ export function renderArticle(rawInput: ArticleInput) {
     const range = parsed.sourceMap.find((source) => source.blockIndex === issue.blockIndex);
     return { ...issue, ...(range ? { startLine: range.startLine, endLine: range.endLine } : {}) };
   });
-  issues.push(...unsupportedMarkdown(input.markdown));
+  issues.push(...validateMarkdownSyntax(input.markdown));
   const previewHtml = renderWechatHtml(parsed.document, template);
   const html = previewHtml.replace(/\sdata-wedraft-(?:block-index|image-id)="[^"]*"/g, "");
   const status = hasBlockingIssues(issues) ? "blocked" as const : "ready" as const;

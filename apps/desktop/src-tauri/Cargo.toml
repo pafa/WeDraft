@@ -15,6 +15,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 base64 = "0.22"
+icu_normalizer = { version = "=2.2.0", default-features = false, features = ["compiled_data"] }
 arboard = { version = "3.6.1", default-features = false }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif"] }
 rusqlite = { version = "0.37", features = ["bundled"] }

@@ -15,20 +15,17 @@
     "tauri:build": "tauri build --target aarch64-apple-darwin --bundles app,dmg"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-opener": "^2.5.3",
     "@wedraft/article-model": "workspace:*",
     "@wedraft/article-parser": "workspace:*",
+    "@wedraft/core": "workspace:*",
     "@wedraft/shared-types": "workspace:*",
     "@wedraft/validation": "workspace:*",
     "@wedraft/wechat-renderer": "workspace:*",
     "lucide-react": "^0.468.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-hook-form": "^7.62.0",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.8",
     "@wedraft/editor-ui": "workspace:*"
   },
   "devDependencies": {

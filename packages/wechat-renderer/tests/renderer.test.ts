@@ -299,6 +299,21 @@ describe("renderWechatHtml", () => {
     expect(html).toContain("ok");
   });
 
+  it("保留正文和代码中的 file 协议文字，同时移除 file 链接与图片地址", () => {
+    const html = renderWechatHtml({
+      ...document,
+      blocks: [
+        { type: "paragraph", children: [{ text: "打开 file:///tmp/example.md 阅读。" }] },
+        { type: "code", code: 'const url = "file:///tmp/example.md";' },
+      ],
+    });
+    expect(html).toContain("打开 file:///tmp/example.md 阅读。");
+    expect(html).toContain('const url = "file:///tmp/example.md";');
+    const sanitized = sanitizeWechatHtml('<a href="file:///tmp/example.md">文件</a><img src="file:///tmp/example.png">');
+    expect(sanitized).not.toContain("file://");
+    expect(sanitized).toContain("文件");
+  });
+
   it("转义正文中的 HTML 字符", () => {
     const html = renderWechatHtml({
       ...document,

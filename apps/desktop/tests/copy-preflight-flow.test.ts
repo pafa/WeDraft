@@ -86,6 +86,34 @@ afterEach(() => {
 });
 
 describe("copy preflight flow", () => {
+  it("引用式链接触发源语法阻断，定位原文后修正才能复制", async () => {
+    useEditorStore.getState().setMarkdown("标题\n\n[关键原文][source]\n\n[source]: https://example.com");
+    const host = document.body.appendChild(document.createElement("div"));
+    const root = createRoot(host);
+    await act(async () => {
+      root.render(createElement(App));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await click(buttonByText("复制排版"));
+    expect(document.body.textContent).toContain("引用式链接");
+    expect(document.body.textContent).toContain("第 3 行");
+    expect(copyArticle).not.toHaveBeenCalled();
+    const issue = Array.from(document.querySelectorAll<HTMLButtonElement>(".preflight-issue"))
+      .find((candidate) => candidate.textContent?.includes("引用式链接"));
+    expect(issue).toBeDefined();
+    await click(issue!);
+    const textarea = document.querySelector<HTMLTextAreaElement>("textarea.markdown-editor");
+    expect(document.activeElement).toBe(textarea);
+    expect(textarea?.value.slice(textarea.selectionStart, textarea.selectionEnd)).toBe("[关键原文][source]");
+    await act(async () => {
+      useEditorStore.getState().setMarkdown("标题\n\n[关键原文](https://example.com)");
+    });
+    await click(buttonByText("复制排版"));
+    expect(copyArticle).toHaveBeenCalledOnce();
+    await act(async () => root.unmount());
+  });
+
   it("精确定位问题，修正后可以重新检查并复制", async () => {
     const host = document.body.appendChild(document.createElement("div"));
     const root = createRoot(host);

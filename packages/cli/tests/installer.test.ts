@@ -74,7 +74,7 @@ async function mcpRequest(command: string, args: string[], markdown: string) {
 describe("one-command installation", () => {
   it("installs self-contained tools and Skill, preserves config, and is idempotent", async () => {
     const options = await paths("complete");
-    const original = '# Existing preferences\nmodel = "test-model"\n\n[mcp_servers.existing]\ncommand = "existing-tool"\n';
+    const original = '# Existing preferences\nmodel = "test-model"\n\n[mcp_servers.existing]\ncommand = "existing-tool"\n\n[projects."/Users/demo/wedraft"]\ntrust_level = "trusted"\n';
     await writeFile(options.configFile, original);
     const result = await install(options);
     const config = await readFile(options.configFile, "utf8");
@@ -132,10 +132,18 @@ describe("one-command installation", () => {
   }, 20_000);
   it("refuses foreign configs, foreign Skill files and local edits", async () => {
     const options = await paths("conflicts");
-    const foreign = '[mcp_servers."wedraft"]\ncommand = "my-own-tool"\n';
-    await writeFile(options.configFile, foreign);
-    await expect(install(options)).rejects.toThrow("configuration");
-    expect(await readFile(options.configFile, "utf8")).toBe(foreign);
+    for (const foreign of [
+      '[mcp_servers."wedraft"]\ncommand = "my-own-tool"\n',
+      '["mcp_servers"."wedr\\u0061ft"]\ncommand = "my-own-tool"\n',
+      '["mcp_servers"."wedr\\U00000061ft"]\ncommand = "my-own-tool"\n',
+      '[mcp_servers]\nwedraft = { command = "my-own-tool" }\n',
+      'mcp_servers.wedraft.command = "my-own-tool"\n',
+      'mcp_servers = { example = { command = "another-tool" } }\n',
+    ]) {
+      await writeFile(options.configFile, foreign);
+      await expect(install(options)).rejects.toThrow("configuration");
+      expect(await readFile(options.configFile, "utf8")).toBe(foreign);
+    }
     await writeFile(options.configFile, "");
     await mkdir(options.skillDir); await writeFile(join(options.skillDir, "SKILL.md"), "private skill");
     await expect(install(options)).rejects.toThrow("not owned");

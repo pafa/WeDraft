@@ -1,6 +1,8 @@
 import { create } from "zustand";
 
 import type { UserSettings } from "@wedraft/shared-types";
+import { parseArticle } from "@wedraft/article-parser";
+import { availableTemplates } from "@wedraft/wechat-renderer";
 
 import type { CopyProgress } from "../types.js";
 
@@ -38,6 +40,7 @@ type EditorState = {
     markdown: string;
     author: string;
     digest: string;
+    templateId?: string;
   }) => void;
 };
 
@@ -74,14 +77,10 @@ function markdownWithTitle(article: {
   title: string;
   markdown: string;
 }): string {
-  const firstLine =
-    article.markdown
-      .split(/\r?\n/)
-      .find((line) => line.trim())
-      ?.trim()
-      .replace(/^#{1,6}\s*/, "")
-      .replace(/[*_`]/g, "") ?? "";
-  if (!article.title.trim() || firstLine === article.title.trim()) {
+  const parsedTitle = parseArticle(article.markdown, {
+    contentType: "markdown",
+  }).title;
+  if (!article.title.trim() || parsedTitle === article.title.trim()) {
     return article.markdown;
   }
   return `${article.title.trim()}\n\n${article.markdown}`.trim();
@@ -148,15 +147,20 @@ export const useEditorStore = create<EditorState>((set) => ({
       lastMarkdownEditAt: 0,
     })),
   loadArticle: (article) =>
-    set({
+    set((state) => ({
       articleId: article.id,
       markdown: markdownWithTitle(article),
       author: article.author,
       digest: article.digest,
       sourceUrl: "",
+      settings:
+        article.templateId &&
+        availableTemplates.some((template) => template.id === article.templateId)
+          ? { ...state.settings, defaultTemplateId: article.templateId }
+          : state.settings,
       copy: { status: "idle", message: "已载入本地文章" },
       undoStack: [],
       redoStack: [],
       lastMarkdownEditAt: 0,
-    }),
+    })),
 }));

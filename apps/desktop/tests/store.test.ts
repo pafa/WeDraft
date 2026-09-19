@@ -43,6 +43,38 @@ describe("editor store", () => {
     });
   });
 
+  it("历史文章恢复保存的模板并保留其余设置", () => {
+    useEditorStore.getState().setSettings({ ...defaultSettings, defaultTemplateId: "blueprint", defaultAuthor: "默认作者" });
+    useEditorStore.getState().loadArticle({
+      id: "saved", title: "标题", markdown: "标题\n\n正文",
+      author: "作者", digest: "", templateId: "plain-paper",
+    });
+    expect(useEditorStore.getState().settings).toMatchObject({
+      defaultTemplateId: "plain-paper", defaultAuthor: "默认作者",
+    });
+  });
+
+  it.each([undefined, "removed-template"])("历史文章模板 %s 不可用时保留当前模板", (templateId) => {
+    useEditorStore.getState().loadArticle({
+      id: "saved", title: "标题", markdown: "标题\n\n正文", author: "", digest: "",
+      ...(templateId ? { templateId } : {}),
+    });
+    expect(useEditorStore.getState().settings.defaultTemplateId).toBe(defaultSettings.defaultTemplateId);
+  });
+
+  it.each([
+    "# [标题](https://example.com)",
+    "> **标题**",
+    "1. 标题",
+    "\uFEFF标题",
+  ])("历史文章保留已存在的格式标题：%s", (titleLine) => {
+    const markdown = `${titleLine}\n\n正文`;
+    useEditorStore.getState().loadArticle({
+      id: "saved", title: "标题", markdown, author: "", digest: "",
+    });
+    expect(useEditorStore.getState().markdown).toBe(markdown);
+  });
+
   it("支持多步撤回和重做", () => {
     useEditorStore.getState().setMarkdown("第一版", "checkpoint");
     useEditorStore.getState().setMarkdown("第二版", "checkpoint");
