@@ -19,7 +19,7 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 
 ## Local Git and release rules
 
-- Read `docs/git-workflow.md` before engineering or release work. `main` stores accepted versions. `https://github.com/pafa/WeDraft` is the private source repository for PR review, merging and backup.
+- Read `docs/git-workflow.md` before engineering or release work. `main` stores accepted versions. `https://github.com/pafa/WeDraft` is the public MIT-licensed source repository for PR review, merging and backup.
 - This checkout is the maintained project home. Start new work from current local `main`; after an approved merge and successful backup, leave this checkout on clean `main`. Archived setup/CI branches are historical references, not development baselines.
 - The owner's latest decision supersedes the 2026-09-06 local-only merge workflow: all merges use GitHub PRs. Each PR must describe the problem, changes, actual validation and limitations. This does not require new Actions, branch protection, paid upgrades or release automation.
 - Before edits, inspect cwd, Git root, branch, HEAD, remote and existing changes. Preserve unrelated work; stage only reviewed, named paths. Never use a blanket initial import to create a baseline.
@@ -37,4 +37,4 @@ Maintain WeDraft as a personal, local-first macOS WeChat formatting application.
 - Keep root `README.md` as the product landing page on GitHub's default `main` branch, with `docs/user-guide.md` for detailed usage. Update both when behavior, defaults or installation steps change; verify claims against current code and tests.
 - Use real screenshots with the built-in sample or explicitly approved content. Never include private article history or describe browser preview as proof of native clipboard, image caching or export behavior.
 - Keep application version/date aligned across existing version sources. Documentation-only maintenance does not change the app version or pretend to be a software release.
-- GitHub About, topics and README should describe the current private macOS product. Do not invent download links, public releases, cloud services, CI badges or license grants. Maintain the page when completing relevant changes; no scheduled monitoring or external publishing is implied.
+- GitHub About, topics and README should describe the public Web/AI beta and the existing macOS baseline accurately. Do not invent download links, public releases, cloud services, CI badges or license grants. Maintain the page when completing relevant changes; no scheduled monitoring or external publishing is implied.

@@ -27,17 +27,17 @@
 
 当前一键配置面向 macOS / Linux 上能执行本机命令的 Codex。其他支持本地 stdio MCP 的客户端可以使用生成的配置；纯网页聊天、只接受远程 MCP 地址的客户端可先使用方式一。
 
-当前仍是本地候选：公开仓库、远程 MCP 和在线演示站尚未发布。本地预览中的 `127.0.0.1` 地址仅能由这台电脑上的工具访问，不能直接交给云端 AI。正式公开目标为现有 [pafa/WeDraft](https://github.com/pafa/WeDraft) 仓库，计划网站地址为 `https://wedraft.xiaoha.org`，当前尚未上线。网站部署后，接入页面会自动使用当前站点地址；本地页面不提前生成指向未上线网站的安装命令。
+[pafa/WeDraft](https://github.com/pafa/WeDraft) 已采用 MIT 开源，公开测试版网站为 [wedraft.xiaoha.org](https://wedraft.xiaoha.org)。站点提供安装资源，本地 stdio MCP 在用户电脑运行，并非远程 HTTP MCP 服务。本地预览中的 `127.0.0.1` 地址只能由同一台电脑访问，不能交给云端 AI。验证状态与限制见[首发记录](releases/web-0.1.0.md)。
 
 ## 一次接入
 
-在「接入 AI」页面选择“自动排版”，复制接入指令交给本机 AI，或展开终端选项复制一条命令。当前命令支持 macOS / Linux，并自动登记 Codex。地址由当前站点生成；以下仅表示格式，不能把占位地址直接运行：
+在「接入 AI」页面选择“自动排版”，复制接入指令交给本机 AI，或展开终端选项复制一条命令。当前命令支持 macOS / Linux，并自动登记 Codex。地址由当前站点生成；正式网站的安装命令为：
 
 ```sh
-curl -fsSL 'https://实际站点/integrations/install.sh' | sh -s -- 'https://实际站点/integrations/'
+curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'https://wedraft.xiaoha.org/integrations/'
 ```
 
-也可以告诉本机 AI：“读取这个 WeDraft 站点的 `connect.md`，帮我接入，然后为这篇文章排版。”AI 仍须有执行本机命令和修改配置的权限。
+也可以告诉本机 AI：“读取 https://wedraft.xiaoha.org/connect.md，帮我接入 WeDraft，然后为这篇文章排版。”AI 仍须有执行本机命令和修改配置的权限。
 
 安装器完成：
 

@@ -1,6 +1,6 @@
 # 网页与 AI 首次发布
 
-正式网站已确定为 **https://wedraft.xiaoha.org**；正式开源目标是将现有 **https://github.com/pafa/WeDraft** 改为公开，采用 [MIT](../LICENSE)。当前只准备本地候选，不代表域名已绑定或仓库已公开。
+公开测试版网站为 **https://wedraft.xiaoha.org**，现有 **https://github.com/pafa/WeDraft** 已采用 [MIT](../LICENSE) 开源。工具集版本 `0.1.0`，部署源码为 `b00fee0cf6288b3dcbab094d5da3f89ab1ffde95`；部署与公网验收进度见[首发记录](releases/web-0.1.0.md)。真实微信环境尚未验收。
 
 首发范围是网页、七款内置模板、CLI、本地 MCP 与 Skill。Mac 仍保留 1.1.2 基线，不包含本次重新打包、签名或公证。
 
@@ -27,7 +27,7 @@ node scripts/prepare-web-release.mjs
 
 ## 站点部署要求
 
-由静态托管服务在域名根目录提供整个 `site/`，不需要后端、账号、数据库或模型 API Key。具体托管服务尚待确定；上线时核验 TLS 证书和正式域名，不能把本机 HTTP 成功当作 HTTPS 验收。
+由 Cloudflare Workers Static Assets 在域名根目录提供构建产物（首发为 `deploy-site/`，在原始 `site/` 上仅增加托管响应头 `_headers`），无应用后台，不需要账号、数据库或模型 API Key。当前部署版本为 `9bcb94d4-a167-473e-9617-a0d9f84f0606`。发布验收需核对正式域名 TLS、资源与完整源 SHA，不能把本机 HTTP 成功当作 HTTPS 验收。
 
 - `/`、`/#/templates`、`/#/ai` 使用同一入口。hash 路由不需要服务端路由重写。
 - `/connect.md` 与 `/integrations/*` 必须返回真实文件；不存在的安装资源返回 404，不能兜底成 HTML。
@@ -35,15 +35,15 @@ node scripts/prepare-web-release.mjs
 - `.mjs` 提供 JavaScript MIME，`.json` 为 JSON，`.md` / `.sh` / `.txt` 为纯文本。保留站点与安装目录中的第三方许可原文。
 - 当前没有 service worker、遥测、文章服务或远程 HTTP MCP。不要把 `/integrations/` 描述为远程 MCP 地址。
 - 文章仅在当前页面内存暂存，刷新或关闭清空；网页不提供文章库。Cookie 只记默认模板，需要保留原稿时先导出 `.wedraft.zip`。不会读取、删除或迁移旧候选的浏览器记录或 Mac 文章历史。
-- 根据最终托管服务补充访问日志与保留策略的真实说明。远程图片仍请求来源网站，AI 客户端处理内容的方式由其自身设置决定。
+- 部署配置关闭 Workers observability，不主动启用 Workers 请求日志；站点响应使用 `no-transform` 阻止区域级分析脚本自动注入，不改变主站设置；Cloudflare 平台仍可能处理基础访问记录，不承诺零日志或未经核实的保留期限。远程图片仍请求来源网站，AI 客户端处理内容的方式由其自身设置决定。
 
-正式地址的预期安装命令如下；**站点上线并验收前暂不可用**：
+正式网站提供以下安装命令；各平台验收范围见首发记录：
 
 ```sh
 curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'https://wedraft.xiaoha.org/integrations/'
 ```
 
-## 公开之前
+## 发布核对清单
 
 1. 核对已选定的 MIT LICENSE 与第三方原文随产物保留。本地临时附件和用户文章数据排除在发布之外，不继续做附件审查。
 2. 复核目标仓库的全部可见分支、标签、可达历史、提交身份和工作流记录。用户选择了直接公开现有仓库，不能只审核当前分支，也不能未经授权改写或删除历史。
