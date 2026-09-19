@@ -7,6 +7,7 @@ type ScrollMetrics = {
 export type ContentAnchor = {
   blockIndex: number;
   progress: number;
+  edge?: "start" | "end";
 };
 
 export type ContentBox = {
@@ -31,11 +32,20 @@ export function contentAnchorFromScroll(
   scrollTop: number,
   clientHeight: number,
   boxes: ContentBox[],
+  scrollHeight: number,
 ): ContentAnchor | null {
   if (!boxes.length) return null;
   const ordered = [...boxes].sort((left, right) => left.top - right.top);
   const focus = scrollTop + clientHeight * VIEWPORT_FOCUS;
   const first = ordered[0]!;
+  // A reading anchor inside the viewport cannot represent the container edges:
+  // the same paragraph may have very different heights in the two panes.
+  if (scrollTop <= 1 || scrollHeight <= clientHeight) {
+    return { blockIndex: first.blockIndex, progress: 0, edge: "start" };
+  }
+  if (scrollTop >= scrollHeight - clientHeight - 1) {
+    return { blockIndex: ordered.at(-1)!.blockIndex, progress: 1, edge: "end" };
+  }
   if (focus <= first.top) {
     return { blockIndex: first.blockIndex, progress: 0 };
   }
@@ -63,7 +73,10 @@ export function scrollTopForContentAnchor(
   anchor: ContentAnchor,
   clientHeight: number,
   boxes: ContentBox[],
+  scrollHeight: number,
 ): number | null {
+  if (anchor.edge === "start") return 0;
+  if (anchor.edge === "end") return Math.max(0, scrollHeight - clientHeight);
   const box = boxes.find(
     (candidate) => candidate.blockIndex === anchor.blockIndex,
   );

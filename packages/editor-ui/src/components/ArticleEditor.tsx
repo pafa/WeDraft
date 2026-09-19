@@ -393,6 +393,7 @@ export function ArticleEditor({
       contentSync.anchor,
       textarea.clientHeight,
       readEditorBoxes(),
+      textarea.scrollHeight,
     );
     if (nextTop === null) return;
     appliedContentSyncRevisionRef.current = contentSync.revision;
@@ -475,6 +476,7 @@ export function ArticleEditor({
         textarea.scrollTop,
         textarea.clientHeight,
         readEditorBoxes(),
+        textarea.scrollHeight,
       );
       if (anchor) onContentAnchorChange(anchor);
     });
