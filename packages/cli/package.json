@@ -1,0 +1,7 @@
+{
+  "name":"@wedraft/cli","version":"0.1.0","private":true,"type":"module",
+  "bin":{"wedraft":"dist/cli.mjs"},"files":["dist"],"exports":{"./files":"./src/files.ts"},
+  "scripts":{"build":"node ../../scripts/build-tools.mjs cli","lint":"tsc --noEmit","typecheck":"tsc --noEmit","test":"vitest run"},
+  "dependencies":{},
+  "devDependencies":{"@wedraft/core":"workspace:*","typescript":"^5.9.3","vitest":"^3.2.7"}
+}

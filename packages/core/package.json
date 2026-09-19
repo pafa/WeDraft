@@ -1,0 +1,21 @@
+{
+  "name": "@wedraft/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "lint": "tsc --noEmit", "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": {
+    "@wedraft/article-model": "workspace:*",
+    "@wedraft/article-parser": "workspace:*",
+    "@wedraft/shared-types": "workspace:*",
+    "@wedraft/validation": "workspace:*",
+    "@wedraft/wechat-renderer": "workspace:*",
+    "fflate": "0.8.2",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": { "@types/mdast": "^4.0.4", "typescript": "^5.9.3", "vitest": "^3.2.7" }
+}

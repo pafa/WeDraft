@@ -1,6 +1,7 @@
 import { Check, Eye, Monitor, Pencil, Smartphone } from "lucide-react";
 import {
   type ClipboardEvent,
+  type ReactNode,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -206,6 +207,27 @@ function BackChevron() {
   );
 }
 
+function DeviceViewport({ mode, enabled, children }: { mode: "iphone" | "android"; enabled: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(true);
+  const [available, setAvailable] = useState({ width: 456, height: 972 });
+  const width = mode === "iphone" ? 456 : 424;
+  const height = mode === "iphone" ? 972 : 904;
+  useLayoutEffect(() => {
+    const area = ref.current;
+    if (!enabled || !area) return;
+    const observer = new ResizeObserver(() => setAvailable({ width: area.clientWidth - 24, height: area.clientHeight - 24 }));
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, [enabled]);
+  if (!enabled) return children;
+  const scale = fit ? Math.max(0.1, Math.min(1, available.width / width, available.height / height)) : 1;
+  return <div className="device-viewport">
+    <div className="device-scale-controls"><span>{mode === "iphone" ? "440 × 956" : "412 × 892"} · {Math.round(scale * 100)}%</span><div><button aria-pressed={fit} onClick={() => setFit(true)}>适应窗口</button><button aria-pressed={!fit} onClick={() => setFit(false)}>100%</button></div></div>
+    <div className="device-fit-area" ref={ref}><div className="device-scaled-bounds" style={{ width: width * scale, height: height * scale }}><div className="device-transform" style={{ width, height, transform: `scale(${scale})` }}>{children}</div></div></div>
+  </div>;
+}
+
 export function WechatPreview({
   document,
   html,
@@ -215,6 +237,8 @@ export function WechatPreview({
   onMarkdownChange,
   templateId,
   onTemplateChange,
+  templateControl,
+  fixedDevice = false,
   contentSync,
   activeBlock,
   onContentAnchorChange,
@@ -228,6 +252,8 @@ export function WechatPreview({
   onMarkdownChange: (markdown: string) => void;
   templateId: string;
   onTemplateChange: (templateId: string) => void;
+  templateControl?: ReactNode;
+  fixedDevice?: boolean;
   contentSync: ContentSyncEvent | null;
   activeBlock: {
     blockIndex: number;
@@ -357,7 +383,7 @@ export function WechatPreview({
           });
       }
     });
-  }, [directEditDisabled, document.blocks, document.title, html, sourceMap]);
+  }, [directEditDisabled, document.blocks, document.title, html, sourceMap, previewMode]);
 
   useLayoutEffect(() => {
     const article = articleRef.current;
@@ -398,6 +424,7 @@ export function WechatPreview({
     const article = articleRef.current;
     if (!article) return [];
     const containerRect = article.getBoundingClientRect();
+    const scale = containerRect.width / article.offsetWidth || 1;
     return Array.from(
       article.querySelectorAll<HTMLElement>(
         "[data-wedraft-block-index]",
@@ -408,8 +435,8 @@ export function WechatPreview({
         blockIndex: Number(
           element.dataset.wedraftBlockIndex ?? "-1",
         ),
-        top: rect.top - containerRect.top + article.scrollTop,
-        height: Math.max(1, rect.height),
+        top: (rect.top - containerRect.top) / scale + article.scrollTop,
+        height: Math.max(1, rect.height / scale),
       };
     });
   };
@@ -680,7 +707,7 @@ export function WechatPreview({
     <article
       ref={articleRef}
       className="wechat-article"
-      aria-label={`${activePreview.description}文章滚动预览`}
+      aria-label={`${fixedDevice ? activePreview.label : activePreview.description}文章滚动预览`}
       tabIndex={0}
       onScroll={onPreviewScroll}
       onMouseDownCapture={onPreviewMouseDown}
@@ -728,7 +755,7 @@ export function WechatPreview({
                 type="button"
                 className={mode.id === previewMode ? "active" : ""}
                 aria-pressed={mode.id === previewMode}
-                title={mode.description}
+                title={fixedDevice ? (mode.id === "iphone" ? "iPhone · 440 × 956" : mode.id === "android" ? "Android · 412 × 892" : mode.description) : mode.description}
                 key={mode.id}
                 onClick={() => setPreviewMode(mode.id)}
               >
@@ -742,7 +769,7 @@ export function WechatPreview({
             ))}
           </div>
           <span className="preview-mode">
-            {activePreview.description}
+            {fixedDevice ? (previewMode === "iphone" ? "iPhone · 440 × 956" : previewMode === "android" ? "Android · 412 × 892" : activePreview.description) : activePreview.description}
           </span>
           <span className={`preview-edit-status ${editStatus}`}>
             <Pencil size={11} />
@@ -756,7 +783,7 @@ export function WechatPreview({
           </span>
         </div>
       </div>
-      <div className="template-switcher" aria-label="排版模板">
+      {templateControl ?? <div className="template-switcher" aria-label="排版模板">
         <span>模板</span>
         {availableTemplates.map((template) => (
           <button
@@ -769,7 +796,7 @@ export function WechatPreview({
             {template.name}
           </button>
         ))}
-      </div>
+      </div>}
       {previewMode === "web" ? (
         <div className="web-shell">
           <div className="browser-chrome">
@@ -786,7 +813,8 @@ export function WechatPreview({
           {article}
         </div>
       ) : (
-        <div className={`phone-shell ${previewMode}`}>
+        <DeviceViewport mode={previewMode} enabled={fixedDevice}>
+        <div className={`phone-shell ${previewMode}${fixedDevice ? " fixed-device" : ""}`} data-screen-width={previewMode === "iphone" ? 440 : 412} data-screen-height={previewMode === "iphone" ? 956 : 892}>
           <div className="phone-status">
             <span className="status-time">
               {previewMode === "iphone" ? "9:41" : "12:45"}
@@ -804,7 +832,7 @@ export function WechatPreview({
           </div>
           <div className="wechat-bar">
             <span className="wechat-back">
-              <BackChevron />
+              {fixedDevice && previewMode === "android" ? <svg className="back-chevron android-back" viewBox="0 0 24 24" aria-hidden><path d="M20 12H4m7-7-7 7 7 7" /></svg> : <BackChevron />}
             </span>
             <strong>公众号文章</strong>
             <span className="wechat-actions">
@@ -814,11 +842,13 @@ export function WechatPreview({
             </span>
           </div>
           {article}
+          {fixedDevice && <div className="device-bottom-safe-area" aria-hidden />}
           <span
             className={`gesture-indicator ${previewMode}`}
             aria-hidden
           />
         </div>
+        </DeviceViewport>
       )}
     </section>
   );

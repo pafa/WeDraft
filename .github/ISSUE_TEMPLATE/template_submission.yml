@@ -1,0 +1,65 @@
+name: 提交模板
+description: 提交新的排版风格、预览与实现信息。
+title: "[模板] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        模板以样式配置随源码审阅和分发，当前不支持从任意 URL 动态安装。实现方法见仓库 docs/templates.md。
+        请使用最小中性样稿与截图，不附私人文章、客户内容、凭据、个人信息或真实草稿文章包。
+  - type: input
+    id: name
+    attributes:
+      label: 模板名称
+      placeholder: 便于辨认的中文或英文名称
+    validations:
+      required: true
+  - type: input
+    id: template_id
+    attributes:
+      label: 稳定的唯一 ID
+      description: 使用简短的小写英文和连字符，不占用现有模板 ID。
+      placeholder: my-reading
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 风格与适用场景
+      description: 说明与已有模板的区别，以及标题、正文、引用和表格的阅读设计。
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 实现位置或候选链接
+      description: 可填写当前仓库的分支、PR、文件路径；尚无实现时明确写“设计提案”。不要提供需要私人账户或令牌才能读取的地址。
+    validations:
+      required: true
+  - type: textarea
+    id: preview
+    attributes:
+      label: 中性样稿与效果预览
+      description: 附最小 Markdown 样稿及桌面、窄屏截图，注明视口宽度；不要用截图冒充真机微信验收。
+    validations:
+      required: true
+  - type: textarea
+    id: attribution
+    attributes:
+      label: 作者、来源与许可信息
+      description: 说明原创或参考来源；引用图片、字体、图形或代码时列出来源及适用许可。不确定的材料先不要附上。
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: 已验证与未验证
+      description: 分别列出 ./scripts/verify、浏览器预览、文章包往返、微信粘贴的实际结果；尚未实现或未测的直接注明。
+      placeholder: |
+        源码提交：
+        自动检查与结果：
+        浏览器与视口：
+        微信系统/版本与结果：未验证
+        已知限制：
+    validations:
+      required: true

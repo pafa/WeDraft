@@ -181,6 +181,7 @@ export function ArticleEditor({
   onActiveBlockChange,
   onImagePreviewReady,
   prepareImage,
+  compactHeader = false,
   copyPlainText = (text: string) => navigator.clipboard.writeText(text),
   persistenceHint = "复制后进入文章历史",
   imageProcessingHint = "JPG / PNG / WEBP 会在本机自动检测并优化；GIF 保留动画。",
@@ -200,6 +201,7 @@ export function ArticleEditor({
   onImagePreviewReady: (localPath: string, dataUrl: string) => void;
   prepareImage: (file: File) => Promise<{ url: string; dataUrl: string; notice: string; warning?: boolean }>;
   copyPlainText?: (text: string) => Promise<void>;
+  compactHeader?: boolean;
   persistenceHint?: string;
   imageProcessingHint?: string;
 }) {
@@ -214,12 +216,40 @@ export function ArticleEditor({
   const editorShellRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const shortcutBarRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const applyingScrollRef = useRef(false);
   const scrollFrameRef = useRef<number | null>(null);
   const appliedContentSyncRevisionRef = useRef<number | null>(null);
   const autoScrolledPreviewBlockRef = useRef<number | null>(null);
   const [imageBusy, setImageBusy] = useState(false);
+  useLayoutEffect(() => {
+    if (!compactHeader) return;
+    const bar = shortcutBarRef.current;
+    if (!bar) return;
+    let previousWidth = -1;
+    const fit = () => {
+      const width = bar.clientWidth;
+      if (!width) return;
+      previousWidth = width;
+      // Measure expanded labels synchronously, then settle before painting.
+      bar.dataset.iconOnly = "false";
+      const style = getComputedStyle(bar);
+      const buttons = [...bar.querySelectorAll<HTMLButtonElement>("button")];
+      const required = buttons.reduce((sum, button) => sum + button.getBoundingClientRect().width, 0)
+        + Math.max(0, buttons.length - 1) * parseFloat(style.columnGap);
+      const available = width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      bar.dataset.iconOnly = String(required > available);
+    };
+    fit();
+    const observer = new ResizeObserver(() => {
+      if (bar.clientWidth !== previousWidth) fit();
+    });
+    observer.observe(bar);
+    let disposed = false;
+    void document.fonts.ready.then(() => { if (!disposed) fit(); });
+    return () => { disposed = true; observer.disconnect(); };
+  }, [compactHeader, imageBusy]);
   const [imageError, setImageError] = useState("");
   const [imageNotice, setImageNotice] = useState<{
     message: string;
@@ -604,11 +634,11 @@ export function ArticleEditor({
       <div className="column-header">
         <div>
           <span className="eyebrow">PASTE & FORMAT</span>
-          <h2>粘贴文章</h2>
+          <h2>{compactHeader ? "编辑原稿" : "粘贴文章"}</h2>
         </div>
-        <span className="autosave-label">{persistenceHint}</span>
+        {compactHeader ? <button type="button" className={`text-button${rulesCopied ? " success" : ""}`} onClick={() => void copyMarkdownRules()}><ClipboardCopy size={14} />{rulesCopied ? "规则已复制" : "复制 Markdown 规则"}</button> : <span className="autosave-label">{persistenceHint}</span>}
       </div>
-      <div className="editor-toolbar">
+      <div className="editor-toolbar" hidden={compactHeader}>
         <span>
           <Sparkles size={14} />
           {demoActive
@@ -633,7 +663,7 @@ export function ArticleEditor({
           </button>
         </div>
       </div>
-      <div className="markdown-shortcut-bar" aria-label="Markdown 快捷格式">
+      <div ref={shortcutBarRef} className="markdown-shortcut-bar" aria-label="Markdown 快捷格式">
         <div className="markdown-shortcut-list">
           {markdownShortcuts.map(
             ({
@@ -664,6 +694,7 @@ export function ArticleEditor({
                     type="button"
                     className={`markdown-shortcut-button${active ? " active" : ""}`}
                     title={title}
+                    aria-label={id === "image" && imageBusy ? "处理中…" : label}
                     aria-pressed={
                       toggleShortcuts.has(id) ? active : undefined
                     }
@@ -682,7 +713,7 @@ export function ArticleEditor({
                     }}
                   >
                     <Icon size={13} />
-                    {id === "image" && imageBusy ? "处理中…" : label}
+                    <span className="shortcut-label">{id === "image" && imageBusy ? "处理中…" : label}</span>
                   </button>
                 </div>
               );
@@ -706,7 +737,7 @@ export function ArticleEditor({
             }}
           >
             <Undo2 size={14} />
-            撤回
+            <span className="shortcut-label">撤回</span>
           </button>
           <button
             type="button"
@@ -724,15 +755,15 @@ export function ArticleEditor({
             }}
           >
             <Redo2 size={14} />
-            重做
+            <span className="shortcut-label">重做</span>
           </button>
         </div>
-        <span
+        {!compactHeader && (<span
           className="article-character-count"
           aria-label={`文章总字数 ${characterCount.toLocaleString()} 字`}
         >
           总字数 {characterCount.toLocaleString()} 字
-        </span>
+        </span>)}
       </div>
       <div className="markdown-editor-shell" ref={editorShellRef}>
         <div className="markdown-editor-measure" ref={measureRef} aria-hidden>
@@ -840,7 +871,7 @@ export function ArticleEditor({
           })}
         </div>
       </div>
-      <div className="editor-footer">
+      <div className={`editor-footer${compactHeader ? " editor-status" : ""}`}>
         {demoActive ? <span>示例内容不会保存或复制</span> : null}
         {imageError || rulesError ? (
           <span className="field-error">{imageError || rulesError}</span>
@@ -850,7 +881,14 @@ export function ArticleEditor({
             {imageNotice.message}
           </span>
         ) : null}
+      {compactHeader && <span
+          className="article-character-count"
+          aria-label={`文章总字数 ${characterCount.toLocaleString()} 字`}
+        >
+          总字数 {characterCount.toLocaleString()} 字
+        </span>}
       </div>
+
       {pendingImage ? (
         <div
           className="confirm-dialog-backdrop"

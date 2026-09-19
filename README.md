@@ -4,9 +4,15 @@
 
 # WeDraft
 
-**在 Mac 上整理文章，一键复制成适合微信公众号的排版。**
+**让文章变成适合微信阅读的排版，手工编辑与 AI 工作流共用一套模板。**
 
-WeDraft 是面向个人作者与编辑的本地排版应用。把 Markdown 或纯文本粘贴进来，调整章节、图片和引用，边编辑边预览，再将正文复制到公众号后台。文章由你掌握，排版交给模板。
+WeDraft 提供网页版、CLI、本地 MCP 与 Skill，并保留原有 Mac 应用。你可以让 AI 整理 Markdown 后回网页调整，也可以直接让已接入 WeDraft 的 AI 为 Markdown 排版，打开结果复制正文。
+
+**发布准备中。** 网页与 AI 工具集候选为 `0.1.0`，正式网站已确定为 `https://wedraft.xiaoha.org`；发布时将现有 `pafa/WeDraft` 仓库改为公开。采用 [MIT](LICENSE)，当前尚未部署或改变仓库可见性。
+
+[网页使用](docs/web-guide.md) · [AI 两条使用流程](docs/ai-integration.md) · [模板贡献](docs/templates.md) · [发布与部署材料](docs/deployment.md)
+
+原有 Mac 应用基线：
 
 当前版本：`1.1.2`
 
@@ -14,20 +20,42 @@ WeDraft 是面向个人作者与编辑的本地排版应用。把 Markdown 或�
 
 **Apple Silicon macOS · 本地存储 · 两套排版模板 · 私有源码备份**
 
+## 网页与 AI 初版（开发候选）
+
+同一套排版核心现在提供独立网页、CLI 和本地 MCP，并附带配套 Skill。可在网页手工排版，也可让 AI 生成预览和 `.wedraft.zip` 文章包，再导入网页继续编辑。
+
+工具集开发版本为 `0.1.0`；上方 `1.1.2` 是现有 Mac 应用基线，本次没有发布或替换 Mac 安装包。仓库仍是私有源码备份，在线演示、公开仓库及 npm 包尚未发布。
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev:web
+# 另一个终端运行命令行或配置本地 MCP
+pnpm build:tools
+node packages/cli/dist/cli.mjs --help
+```
+
+上述源码运行方式需要 Node / pnpm，不需要 Rust 或微信凭据。网站的“一条命令接入”会自动准备工具，无需另装 pnpm。网页版直接展示含图示例，点击灰色编辑区即可输入自己的内容，文章只在当前页面临时保留，刷新或关闭后清空；独立模板库提供七款模板并记住默认选择，独立 AI 页面区分手工整理与 Skill / MCP 自动排版。文章包包含原稿、模板和本地图片，可自行下载保留；不读取现有 Mac 数据库。
+
+[网页指南](docs/web-guide.md) · [AI / MCP / Skill 接入](docs/ai-integration.md) · [开源管理安排](docs/open-source-plan.md)
+
+![独立网页版：手工编辑、排版预览和文章包交接](docs/images/web-editor.png)
+
+*真实 Chrome 截图，使用中性内置样稿。下文介绍现有 Mac 版功能；网页与 Mac 的存储、图片限制和导出格式有所不同。*
+
 [使用指南](docs/user-guide.md) · [默认模板规范](docs/next-edition-guidelines.md) · [版本记录](CHANGELOG.md) · [开发与维护](docs/git-workflow.md)
 
 ![WeDraft 编辑与预览界面：左侧 Markdown，右侧小哈公社New 排版](docs/images/editor-overview.png)
 
 *当前源码的 Web 预览截图，使用应用内置组件样稿。原生图片缓存、文章导出与 macOS 剪贴板在桌面 App 中使用。*
 
-## 一篇文章的工作流程
+## Mac 版：一篇文章的工作流程
 
 1. **输入**：第一行写文章标题，第二行起写正文，或直接粘贴完整稿件。
 2. **排版**：用工具栏处理章节、粗体、引用、列表、代码和图片，切换模板查看效果。
 3. **检查**：在网页版、iPhone、Android 三种视口预览；复制前按提示处理图片、表格和来源等问题。
 4. **复制**：点击“复制排版”，再打开公众号后台粘贴正文。标题单独填写，最终发布由你在微信后台完成。
 
-## 主要能力
+## Mac 版主要能力
 
 | 能力 | 实际使用方式 |
 | --- | --- |
@@ -40,7 +68,7 @@ WeDraft 是面向个人作者与编辑的本地排版应用。把 Markdown 或�
 | 历史与导出 | 执行“复制排版”后进入本地历史；支持重新打开、删除、单篇 Markdown 导出与全部文章 ZIP 导出。 |
 | 写作辅助规则 | 一键复制应用支持的 Markdown 规则，供你在外部 AI 工具中使用；应用不内置 AI 调用。 |
 
-## 数据与使用边界
+## Mac 版数据与使用边界
 
 - 不需要微信 AppID、AppSecret、服务地址或任何公众号凭据，也不调用微信发布接口。
 - 文章历史、设置和缓存图片存储在本机；不提供账号、云同步或内容上传服务。
@@ -69,7 +97,11 @@ pnpm dev
 | 命令 | 用途 |
 | --- | --- |
 | `pnpm dev` | 启动 Tauri 桌面开发环境。 |
-| `pnpm dev:web` | 查看浏览器中的编辑界面；不具备完整原生能力。 |
+| `pnpm dev:web` | 启动独立网页版，临时排版、图片与文章包交接。 |
+| `pnpm dev:desktop-web` | 查看 Mac 前端的浏览器预览；不具备完整原生能力。 |
+| `pnpm build:web` | 构建可托管的静态网页到 `apps/web/dist`。 |
+| `pnpm build:tools` | 构建 CLI 与本地 stdio MCP。 |
+| `pnpm smoke:web` | 用本机 Chrome 验证 MCP → 网页 → 导出和剪贴板交接。 |
 | `./scripts/verify` | 检查版本、入库文件、类型、测试和前端构建。 |
 | `cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml` | 运行 Rust 原生测试。 |
 | `pnpm build:mac` | 构建 `aarch64-apple-darwin` 的 `.app` 与 `.dmg`，不构建 Intel 版本。 |
@@ -79,7 +111,7 @@ pnpm dev
 
 ## 主线与文档
 
-**`main` 是本项目唯一的维护主线。** 本地完成开发、检查和版本管理，GitHub 私有仓库承载 PR 审阅、合并和源码备份。新任务使用短期分支，所有合并通过 PR，注明变更和验证结果，获批后合入 `main`；不要求新增 Actions 或付费保护。
+**`main` 是本项目唯一的维护主线。** 本地完成开发和验证，任务分支通过 PR 审阅并合入 `main`。每个 PR 注明变更、验证和限制；当前仓库仍为私有，公开与部署另行确认。
 
 | 文档 | 内容 |
 | --- | --- |
@@ -88,7 +120,8 @@ pnpm dev
 | [架构说明](docs/architecture.md) | 前端、原生层、渲染与数据边界。 |
 | [共享组件准备](docs/shared-components.md) | Mac 组件边界和后续开源任务的复用入口。 |
 | [验收清单](docs/acceptance-tests.md) | 编辑、复制、图片和历史等功能的验证步骤。 |
-| [Git 与维护规则](docs/git-workflow.md) | 主线、任务分支、本地审阅、备份和版本发布。 |
+| [网页设计规范](docs/web-design-system.md) | 全站字体层级、按钮尺寸和响应式约定。 |
+| [Git 与维护规则](docs/git-workflow.md) | 主线、任务分支、PR 审阅、备份和版本发布。 |
 | [版本记录](CHANGELOG.md) | 应用版本及后续变更记录。 |
 
 源码备份不包含用户文章、缓存图片、密钥、安装包或未提交工作。页面说明与截图随实际功能变更维护，应用版本日期与文档整理日期分别记录。

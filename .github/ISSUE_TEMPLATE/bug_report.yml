@@ -1,0 +1,65 @@
+name: 报告问题
+description: 用最小样例描述可以重现的错误。
+title: "[问题] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先搜索是否已有相同问题。只使用最小中性样稿和脱敏截图；不要粘贴私人文章、客户内容、凭据、个人信息或真实草稿文章包。
+  - type: dropdown
+    id: surface
+    attributes:
+      label: 出现问题的位置
+      options:
+        - 网页编辑器或模板库
+        - CLI 命令行
+        - MCP 或 Skill 接入
+        - macOS 应用
+        - 文档或其他
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本或源码提交
+      description: 源码运行请填 commit；无法确定可写“不清楚”。
+      placeholder: 工具版本、应用版本或 git rev-parse HEAD 的结果
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 系统与浏览器版本；AI 接入问题请补充客户端名称和版本。无需提供账户信息。
+      placeholder: macOS / Chrome；或 Linux / Codex
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 最短复现步骤
+      placeholder: |
+        1. 打开……
+        2. 选择模板……
+        3. 输入中性样稿或执行命令……
+        4. 观察到……
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: 预期结果与实际结果
+      placeholder: 我希望……，实际发生……。
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: 最小中性样稿或脱敏命令
+      description: 排版问题建议提供几行可复现的 Markdown，并注明模板 ID；不需要完整文章。
+      render: text
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 补充证据（可选）
+      description: 只附相关错误片段或中性样稿截图；区分网页预览与真机微信结果。
