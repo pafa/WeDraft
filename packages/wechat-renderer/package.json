@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@wedraft/shared-types": "workspace:*",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.7"
   },
   "devDependencies": {
     "@types/sanitize-html": "^2.16.1",
