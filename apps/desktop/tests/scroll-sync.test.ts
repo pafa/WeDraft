@@ -41,11 +41,36 @@ describe("bidirectional scroll sync", () => {
       { blockIndex: 0, top: 180, height: 300 },
       { blockIndex: 1, top: 520, height: 90 },
     ];
-    const anchor = contentAnchorFromScroll(100, 200, editorBoxes);
+    const anchor = contentAnchorFromScroll(100, 200, editorBoxes, 1000);
     expect(anchor).toEqual({ blockIndex: 0, progress: 0.875 });
     expect(
-      scrollTopForContentAnchor(anchor!, 300, previewBoxes),
+      scrollTopForContentAnchor(anchor!, 300, previewBoxes, 1500),
     ).toBe(337.5);
+  });
+
+  it("滚回顶部时对齐容器顶部，而不是视口内的正文块", () => {
+    const source = [{ blockIndex: 0, top: 20, height: 800 }];
+    const target = [{ blockIndex: 0, top: 180, height: 2000 }];
+    for (const scrollTop of [-12, 0, 0.5]) {
+      const anchor = contentAnchorFromScroll(scrollTop, 500, source, 1200)!;
+      expect(scrollTopForContentAnchor(anchor, 700, target, 2500)).toBe(0);
+    }
+  });
+
+  it("到达底部时对齐对侧底部，包含段落后的留白", () => {
+    const source = [{ blockIndex: 0, top: 20, height: 800 }];
+    const target = [{ blockIndex: 0, top: 180, height: 2000 }];
+    for (const scrollTop of [699.5, 700, 712]) {
+      const anchor = contentAnchorFromScroll(scrollTop, 500, source, 1200)!;
+      expect(scrollTopForContentAnchor(anchor, 700, target, 2600)).toBe(1900);
+    }
+  });
+
+  it("无滚动空间时优先对齐顶部，空内容仍不产生同步事件", () => {
+    const boxes = [{ blockIndex: 0, top: 20, height: 100 }];
+    const anchor = contentAnchorFromScroll(0, 500, boxes, 500)!;
+    expect(scrollTopForContentAnchor(anchor, 700, boxes, 1200)).toBe(0);
+    expect(contentAnchorFromScroll(0, 500, [], 500)).toBeNull();
   });
 
   it("光标位于空白行时定位到最近的内容块", () => {

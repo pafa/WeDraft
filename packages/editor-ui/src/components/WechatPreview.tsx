@@ -486,6 +486,7 @@ export function WechatPreview({
       contentSync.anchor,
       article.clientHeight,
       readPreviewBoxes(),
+      article.scrollHeight,
     );
     if (nextTop === null) return;
     appliedContentSyncSignatureRef.current = signature;
@@ -542,6 +543,7 @@ export function WechatPreview({
         article.scrollTop,
         article.clientHeight,
         readPreviewBoxes(),
+        article.scrollHeight,
       );
       if (anchor) onContentAnchorChange(anchor);
     });
