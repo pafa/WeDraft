@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, Copy, Download, FilePlus2, FolderOpen, Monitor, Sparkles, Palette, Upload, X } from "lucide-react";
 import { articleInputSchema, createPreviewHtml, ENGINE_VERSION, exportArticleBundle, importArticleBundle, MAX_BUNDLE_BYTES, renderArticle, validateAssets, type ArticleAsset, type LocatedIssue, type PortableArticle } from "@wedraft/core";
 import { ArticleEditor } from "@wedraft/editor-ui/components/ArticleEditor";
@@ -7,8 +7,11 @@ import { useEditorStore } from "@wedraft/editor-ui/stores/editor-store";
 import type { ContentAnchor, ContentSyncEvent } from "@wedraft/editor-ui/services/scroll-sync";
 import { copyHtml, download, prepareBrowserImage } from "./platform.js";
 import { SAMPLE, loadSampleAssets } from "./sample.js";
-import { TemplatesPage, AiPage } from "./Pages.js";
+import { PageLoadBoundary } from "./PageLoadBoundary.js";
 import { readDefaultTemplate, templateCookie } from "./preferences.js";
+
+const TemplatesPage = lazy(() => import("./TemplatesPage.js").then((page) => ({ default: page.TemplatesPage })));
+const AiPage = lazy(() => import("./AiPage.js").then((page) => ({ default: page.AiPage })));
 
 function Dialog({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -220,8 +223,10 @@ export function App() {
           else void copy();
         }}><Copy size={16} />{copying ? "正在复制…" : "复制排版"}</button></div>
     </footer></>}
+    {!editing && <PageLoadBoundary key={route} onReturn={openEditor}><Suspense fallback={<main className="discovery-page" role="status">正在打开页面…</main>}>
     {route === "/templates" && <TemplatesPage defaultId={defaultTemplate} currentId={article.templateId} onChoose={chooseTemplate} />}
     {route === "/ai" && <AiPage />}
+    </Suspense></PageLoadBoundary>}
     {dialog === "export" && <Dialog title="把文章带走" onClose={closeDialog}><p className="dialog-intro">文章包保留原稿、模板和本地图片，可在网页或 AI 工具中继续编辑。</p><div className="export-options">
       <button onClick={() => exportFile("bundle")}><Upload /><span><strong>可编辑文章包</strong><small>.wedraft.zip · 推荐用于保存与 AI 交接</small></span></button>
       <button disabled={result.status === "blocked" || Boolean(output.error)} onClick={() => exportFile("html")}><Monitor /><span><strong>网页预览</strong><small>.html · 带图片与样式的阅读文件</small></span></button>
