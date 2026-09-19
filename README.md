@@ -79,13 +79,14 @@ pnpm dev
 
 ## 主线与文档
 
-**`main` 是本项目唯一的维护主线。** 本地完成开发、检查、审阅和版本管理，GitHub 私有仓库保存源码备份。新任务使用短期分支，批准后在本地合入 `main` 并推送；不要求线上 PR、Actions 或付费保护。
+**`main` 是本项目唯一的维护主线。** 本地完成开发、检查和版本管理，GitHub 私有仓库承载 PR 审阅、合并和源码备份。新任务使用短期分支，所有合并通过 PR，注明变更和验证结果，获批后合入 `main`；不要求新增 Actions 或付费保护。
 
 | 文档 | 内容 |
 | --- | --- |
 | [使用指南](docs/user-guide.md) | 从输入到复制、模板、图片、历史、导出和常见问题。 |
 | [小哈公社New 规范](docs/next-edition-guidelines.md) | 默认模板的层级、间距、颜色和 Markdown 示例。 |
 | [架构说明](docs/architecture.md) | 前端、原生层、渲染与数据边界。 |
+| [共享组件准备](docs/shared-components.md) | Mac 组件边界和后续开源任务的复用入口。 |
 | [验收清单](docs/acceptance-tests.md) | 编辑、复制、图片和历史等功能的验证步骤。 |
 | [Git 与维护规则](docs/git-workflow.md) | 主线、任务分支、本地审阅、备份和版本发布。 |
 | [版本记录](CHANGELOG.md) | 应用版本及后续变更记录。 |
