@@ -64,6 +64,47 @@ async function writeAtomic(path, bytes, mode = 0o644) {
   try { await writeFile(temp, bytes, { flag: 'wx', mode }); await rename(temp, path); }
   finally { await rm(temp, { force: true }); }
 }
+function tomlKeyPath(source) {
+  const parts = []; let remaining = source.trim();
+  while (remaining) {
+    const match = /^(?:[A-Za-z0-9_-]+|"(?:[^"\\]|\\.)*"|'[^']*')/.exec(remaining);
+    if (!match) return null;
+    const token = match[0];
+    try {
+      // TOML also accepts eight-digit Unicode escapes; JSON only accepts four.
+      // Match escaped backslashes first so literal \\U text stays literal.
+      const quoted = token.replace(/\\\\|\\U([0-9a-fA-F]{8})/g, (escape, hex) =>
+        hex ? JSON.stringify(String.fromCodePoint(parseInt(hex, 16))).slice(1, -1) : escape);
+      parts.push(token.startsWith('"') ? JSON.parse(quoted) : token.startsWith("'") ? token.slice(1, -1) : token);
+    }
+    catch { return null; }
+    remaining = remaining.slice(token.length).trimStart();
+    if (!remaining) return parts;
+    if (!remaining.startsWith('.')) return null;
+    remaining = remaining.slice(1).trimStart();
+    if (!remaining) return null;
+  }
+  return parts;
+}
+function hasExistingMcpConfiguration(original) {
+  let section = [];
+  for (const line of original.split(/\r?\n/)) {
+    const header = /^\s*\[\[?(.*?)\]\]?\s*(?:#.*)?$/.exec(line);
+    if (header) {
+      section = tomlKeyPath(header[1]);
+      if (section?.[0] === 'mcp_servers' && section[1] === 'wedraft') return true;
+      continue;
+    }
+    const assignment = /^\s*([^#].*?)\s*=/.exec(line);
+    if (!assignment || !section) continue;
+    const key = tomlKeyPath(assignment[1]);
+    if (!key) continue;
+    const path = [...section, ...key];
+    // Inline mcp_servers tables cannot safely be extended by appending a subtable.
+    if (path[0] === 'mcp_servers' && (path.length === 1 || path[1] === 'wedraft')) return true;
+  }
+  return false;
+}
 function configureMcp(original, block, previous) {
   const start = original.indexOf(START); const end = original.indexOf(END);
   if (start !== -1 || end !== -1) {
@@ -73,7 +114,7 @@ function configureMcp(original, block, previous) {
     return original.slice(0, start) + block + original.slice(end + END.length);
   }
   // Be conservative with alternate TOML spellings and inline tables; never add a duplicate server.
-  if (/^[^#\n]*\bwedraft\b[^\n]*(?:=|\])/m.test(original) || /^\s*(?:mcp_servers|"mcp_servers"|'mcp_servers')\s*=/m.test(original)) throw new Error('An existing WeDraft or inline MCP configuration needs manual integration; no configuration was changed.');
+  if (hasExistingMcpConfiguration(original)) throw new Error('An existing WeDraft or inline MCP configuration needs manual integration; no configuration was changed.');
   return `${original}${original && !original.endsWith('\n') ? '\n' : ''}${original ? '\n' : ''}${block}\n`;
 }
 

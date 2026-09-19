@@ -25,5 +25,5 @@ export async function prepareBrowserImage(file: File): Promise<{ asset: ArticleA
   const image = new Image(); image.src = dataUrl;
   await image.decode();
   if (image.naturalWidth * image.naturalHeight > 40_000_000) throw new Error("图片不能超过 4000 万像素，请先缩小尺寸。");
-  return { asset, url: asset.path, dataUrl, notice: `图片已加入文章：${image.naturalWidth} × ${image.naturalHeight}px；将随草稿保存，导出文章包时一并携带。` };
+  return { asset, url: asset.path, dataUrl, notice: `图片已加入文章：${image.naturalWidth} × ${image.naturalHeight}px；仅在本页暂存，导出文章包时一并携带。` };
 }

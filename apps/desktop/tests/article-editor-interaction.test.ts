@@ -81,6 +81,16 @@ afterEach(async () => {
 });
 
 describe("article editor interactions", () => {
+  it("keyboard activation of the minimap moves the editor selection", async () => {
+    await renderEditor();
+    const marker = document.querySelector<HTMLButtonElement>('[aria-label="定位到第 3 行：正文"]');
+    expect(marker).not.toBeNull();
+    await act(async () => marker?.click());
+    const textarea = document.querySelector("textarea")!;
+    expect(document.activeElement).toBe(textarea);
+    expect(textarea.selectionStart).toBe(4);
+  });
+
   it("一次鼠标点击只执行一次 Markdown 快捷操作", async () => {
     await renderEditor();
     const button = Array.from(document.querySelectorAll("button")).find(

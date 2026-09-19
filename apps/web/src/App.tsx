@@ -21,6 +21,9 @@ function Dialog({ title, children, onClose }: { title: string; children: ReactNo
 export function App() {
   const store = useEditorStore();
   const [assets, setAssets] = useState<ArticleAsset[]>([]);
+  // Async image preparations merge into the latest article asset set, even
+  // when the editor was remounted while another image was being decoded.
+  const assetsRef = useRef<ArticleAsset[]>([]);
   const [sampleAssets, setSampleAssets] = useState<ArticleAsset[]>([]);
   const [demoActive, setDemoActive] = useState(true);
   const [defaultTemplate, setDefaultTemplate] = useState(() => readDefaultTemplate(document.cookie));
@@ -61,6 +64,7 @@ export function App() {
     useEditorStore.setState({ articleId: id, markdown: input.markdown, author: input.author,
       digest: input.digest, sourceUrl: input.sourceUrl,
       settings: { ...state.settings, defaultTemplateId: input.templateId }, undoStack: [], redoStack: [] });
+    assetsRef.current = input.assets;
     setAssets(input.assets); setDemoActive(false); setActiveBlock(null); setContentSync(null);
     setCopyConfirm(false); setMessage(""); setMessageError(false);
   }, []);
@@ -113,7 +117,6 @@ export function App() {
       const input = file.name.endsWith(".zip") ? importArticleBundle(bytes) : file.name.endsWith(".json")
         ? articleInputSchema.parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)))
         : articleInputSchema.parse({ markdown: new TextDecoder("utf-8", { fatal: true }).decode(bytes), templateId: store.settings.defaultTemplateId });
-      renderArticle(input);
       load(input); openEditor();
       notify(`已导入 ${file.name}，可以继续编辑。`); setDialog(null);
     } catch (error) { notify(error instanceof Error ? error.message : "导入失败，当前文章未被替换。", true); }
@@ -196,9 +199,11 @@ export function App() {
         onDismissDemo={() => { setDemoActive(false); setContentSync(null); setActiveBlock(null); setMessage(""); }} sourceMap={result.sourceMap} contentSync={contentSync} activeBlock={activeBlock}
         onContentAnchorChange={(anchor) => sync("editor", anchor)} onActiveBlockChange={(block) => highlight("editor", block)} onImagePreviewReady={() => {}}
         prepareImage={async (file) => {
+          const articleId = useEditorStore.getState().articleId;
           const image = await prepareBrowserImage(file);
-          const next = [...assets.filter((asset) => asset.path !== image.asset.path), image.asset];
-          validateAssets(next); setAssets(next); return image;
+          if (useEditorStore.getState().articleId !== articleId) throw new Error("文章已切换，请在当前文章中重新添加图片。");
+          const next = [...assetsRef.current.filter((asset) => asset.path !== image.asset.path), image.asset];
+          validateAssets(next); assetsRef.current = next; setAssets(next); return image;
         }} />
       <WechatPreview document={result.document} html={result.previewHtml} markdown={store.markdown} sourceMap={result.sourceMap}
         directEditDisabled={showingDemo || Boolean(output.error)} onMarkdownChange={(value) => store.setMarkdown(value, "checkpoint")}
@@ -222,6 +227,6 @@ export function App() {
       <button disabled={result.status === "blocked" || Boolean(output.error)} onClick={() => exportFile("html")}><Monitor /><span><strong>网页预览</strong><small>.html · 带图片与样式的阅读文件</small></span></button>
       <button onClick={() => exportFile("markdown")}><Download /><span><strong>Markdown 原稿</strong><small>.md · 仅文本，不包含本地图片文件</small></span></button></div></Dialog>}
     {dialog === "issues" && <Dialog title={result.status === "blocked" ? "修正后再复制" : "排版检查"} onClose={closeDialog}><p className="dialog-intro">点击问题可定位到原稿。提示不会自动改写内容。</p><div className="web-issues">{result.issues.length ? result.issues.map((issue, index) => <button key={`${issue.code}-${index}`} onClick={() => locate(issue)}><span className={issue.level}>{issue.level === "blocking" ? "必须修正" : "建议检查"} {issue.startLine ? `· 第 ${issue.startLine} 行` : ""}</span><p>{issue.message}</p></button>) : <p><Check size={16} /> 未发现排版问题。</p>}</div>{copyConfirm && result.status === "ready" && <button className="button primary" onClick={() => { closeDialog(); void copy(); }}>确认并继续复制</button>}</Dialog>}
-    {dialog === "help" && <Dialog title="使用说明" onClose={closeDialog}><p className="dialog-intro">文章和图片仅在当前页面内存中处理，刷新或关闭后清空。切换本站页面可继续编辑；如需保存，请先导出文章包。</p><p className="dialog-intro">手机预览按固定逻辑分辨率绘制，默认等比缩放以展示完整机身，也可以切换到 100%。状态栏为模拟显示；系统字体、微信版本与用户字号设置会影响真机效果，发布前请在微信中预览。</p><p className="dialog-intro">默认模板通过 Cookie 记住一年。导入文章包时，保留该文章自己的模板。</p><small>WeDraft Web · 排版引擎 {ENGINE_VERSION}</small></Dialog>}
+    {dialog === "help" && <Dialog title="使用说明" onClose={closeDialog}><p className="dialog-intro">文章和图片仅在当前页面内存中处理，刷新或关闭后清空。返回首页会重新展示示例；如需保留当前文章，请先导出文章包。</p><p className="dialog-intro">手机预览按固定逻辑分辨率绘制，默认等比缩放以展示完整机身，也可以切换到 100%。状态栏为模拟显示；系统字体、微信版本与用户字号设置会影响真机效果，发布前请在微信中预览。</p><p className="dialog-intro">默认模板通过 Cookie 记住一年。导入文章包时，保留该文章自己的模板。</p><small>WeDraft Web · 排版引擎 {ENGINE_VERSION}</small></Dialog>}
   </div>;
 }

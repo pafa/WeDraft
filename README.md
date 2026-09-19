@@ -109,6 +109,8 @@ pnpm dev
 
 安装包位置为 `<Cargo target 目录>/aarch64-apple-darwin/release/bundle/`。未设置 `CARGO_TARGET_DIR` 时，target 目录通常位于 `apps/desktop/src-tauri/target/`；以实际构建输出为准。
 
+代码质量审核与修复记录见[审核记录](docs/code-quality-audit.md)，包括源码保真、导入导出边界、交互回归与冗余清理。修复候选不代表已发布安装包。
+
 ## 主线与文档
 
 **`main` 是本项目唯一的维护主线。** 本地完成开发和验证，任务分支通过 PR 审阅并合入 `main`。每个 PR 注明变更、验证和限制；当前仓库仍为私有，公开与部署另行确认。

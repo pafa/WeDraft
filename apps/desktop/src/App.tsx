@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { ContentIssue, LocalArticle } from "@wedraft/shared-types";
+import type { LocalArticle } from "@wedraft/shared-types";
+import type { LocatedIssue } from "@wedraft/core";
 import {
   copyPreflightIssues,
   hasBlockingIssues,
-  validateArticle,
 } from "@wedraft/validation";
 
 import { ArticleEditor } from "./components/ArticleEditor.js";
@@ -88,10 +88,7 @@ export function App() {
       imagePreviewUrls,
     ],
   );
-  const issues = useMemo(
-    () => validateArticle({ document: articleOutput.document }),
-    [articleOutput.document],
-  );
+  const issues = articleOutput.issues;
   const preflightIssues = useMemo(
     () => copyPreflightIssues(issues),
     [issues],
@@ -252,9 +249,27 @@ export function App() {
   }, [actionBlocked, preflightIssues, runCopy]);
 
   const locateIssue = useCallback(
-    (issue: ContentIssue) => {
+    (issue: LocatedIssue) => {
       if (issue.blockIndex === undefined) {
         setPreflightOpen(false);
+        if (issue.startLine !== undefined) {
+          const line = issue.startLine;
+          requestAnimationFrame(() => {
+            const textarea = document.querySelector<HTMLTextAreaElement>(
+              "textarea.markdown-editor",
+            );
+            if (!textarea) return;
+            const lines = textarea.value.split("\n");
+            const start = lines.slice(0, line - 1).reduce(
+              (offset, text) => offset + text.length + 1,
+              0,
+            );
+            textarea.focus();
+            textarea.setSelectionRange(
+              start, start + (lines[line - 1]?.length ?? 0),
+            );
+          });
+        }
         return;
       }
       const anchor = { blockIndex: issue.blockIndex, progress: 0 };
@@ -270,7 +285,12 @@ export function App() {
   );
 
   const issueLocation = useCallback(
-    (issue: ContentIssue): string => {
+    (issue: LocatedIssue): string => {
+      if (issue.startLine !== undefined) {
+        return issue.endLine !== undefined && issue.endLine !== issue.startLine
+          ? `第 ${issue.startLine}–${issue.endLine} 行`
+          : `第 ${issue.startLine} 行`;
+      }
       if (issue.blockIndex === -1) return "第 1 行 · 文章标题";
       const range = articleOutput.sourceMap.find(
         (candidate) => candidate.blockIndex === issue.blockIndex,

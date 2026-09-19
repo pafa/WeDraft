@@ -406,7 +406,5 @@ export function sanitizeWechatHtml(html: string): string {
         },
       }),
     },
-  })
-    .replaceAll(/\s(?:class|id|on\w+)="[^"]*"/gi, "")
-    .replaceAll(/file:\/\//gi, "");
+  });
 }

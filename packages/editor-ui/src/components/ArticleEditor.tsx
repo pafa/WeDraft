@@ -482,10 +482,11 @@ export function ArticleEditor({
 
   const insertAtCursor = (value: string) => {
     const textarea = textareaRef.current;
-    const start = textarea?.selectionStart ?? markdown.length;
-    const end = textarea?.selectionEnd ?? markdown.length;
+    const currentMarkdown = useEditorStore.getState().markdown;
+    const start = textarea?.selectionStart ?? currentMarkdown.length;
+    const end = textarea?.selectionEnd ?? currentMarkdown.length;
     setMarkdown(
-      `${markdown.slice(0, start)}${value}${markdown.slice(end)}`,
+      `${currentMarkdown.slice(0, start)}${value}${currentMarkdown.slice(end)}`,
       "checkpoint",
     );
     requestAnimationFrame(() => {
@@ -517,11 +518,16 @@ export function ArticleEditor({
 
   const addBodyImage = async (source: string) => {
     const file = pendingImage;
-    if (!file) return;
+    if (!file || imageBusy) return;
+    const articleId = useEditorStore.getState().articleId;
     setImageBusy(true);
     setImageError("");
     try {
       const image = await prepareImage(file);
+      if (!textareaRef.current || useEditorStore.getState().articleId !== articleId) {
+        setPendingImage(null);
+        return;
+      }
       onImagePreviewReady(image.url, image.dataUrl);
       insertAtCursor(buildBodyImageMarkdown(file.name, image.url, source));
       setImageNotice({ message: image.notice, warning: image.warning ?? false });
@@ -865,6 +871,9 @@ export function ArticleEditor({
                   event.preventDefault();
                   event.stopPropagation();
                   jumpToSourceLine(range.startLine);
+                }}
+                onClick={(event) => {
+                  if (event.detail === 0) jumpToSourceLine(range.startLine);
                 }}
               />
             );

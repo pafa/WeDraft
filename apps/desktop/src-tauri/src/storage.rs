@@ -109,7 +109,6 @@ impl AppStorage {
                    created_at, updated_at
             FROM articles
             ORDER BY updated_at DESC
-            LIMIT 100
             "#,
         )?;
         let rows = statement.query_map([], |row| {
@@ -259,5 +258,18 @@ mod tests {
             .collect::<Result<Vec<_>, _>>()
             .expect("column names");
         assert!(!columns.iter().any(|column| column == "cover_path"));
+    }
+
+    #[test]
+    fn listing_keeps_all_articles_for_complete_history_and_export() {
+        let directory = tempfile::tempdir().expect("temporary storage");
+        let storage = AppStorage::new(directory.path().to_path_buf()).expect("storage");
+        for index in 0..105 {
+            storage
+                .save_article(&article(&index.to_string()))
+                .expect("save article");
+        }
+        let articles = storage.list_articles().expect("all articles");
+        assert_eq!(articles.len(), 105);
     }
 }

@@ -30,8 +30,6 @@
 }
 .web-app .dialog-heading h2,
 .web-app .ai-path-heading h2,
-.web-app .connect-heading h2,
-.web-app .try-ai h2,
 .web-app .ai-faq h2,
 .web-app .ai-setup-panel h3 {
   font-family: var(--ui-font);
@@ -60,8 +58,7 @@
 .web-app .ai-agent-note p,
 .web-app .ai-faq p,
 .web-app .dialog-intro,
-.web-app .web-issues p,
-.web-app .template-contribution-copy {
+.web-app .web-issues p {
   font-size: var(--ui-text-body);
   font-weight: var(--ui-weight-regular);
   line-height: var(--ui-leading-body);

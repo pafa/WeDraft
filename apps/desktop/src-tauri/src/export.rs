@@ -1,5 +1,6 @@
-use std::{collections::HashMap, fs::File, io::Write, path::Path};
+use std::{collections::HashSet, fs::File, io::Write, path::Path};
 
+use icu_normalizer::DecomposingNormalizerBorrowed;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
 use crate::{error::AppResult, models::LocalArticle};
@@ -37,15 +38,24 @@ fn markdown_file_name(article: &LocalArticle) -> String {
 
 fn unique_markdown_file_name(
     article: &LocalArticle,
-    occurrences: &mut HashMap<String, usize>,
+    used_names: &mut HashSet<String>,
 ) -> String {
     let stem = safe_file_stem(&article.title, "未命名文章");
-    let occurrence = occurrences.entry(stem.clone()).or_insert(0);
-    *occurrence += 1;
-    if *occurrence == 1 {
-        format!("{stem}.md")
-    } else {
-        format!("{stem} ({occurrence}).md")
+    let mut occurrence = 1;
+    loop {
+        let name = if occurrence == 1 {
+            format!("{stem}.md")
+        } else {
+            format!("{stem} ({occurrence}).md")
+        };
+        // Keep every entry distinct when extracted on case-insensitive macOS volumes.
+        let key = DecomposingNormalizerBorrowed::new_nfd()
+            .normalize(&name.to_lowercase())
+            .into_owned();
+        if used_names.insert(key) {
+            return name;
+        }
+        occurrence += 1;
     }
 }
 
@@ -60,11 +70,11 @@ fn write_articles_zip(path: &Path, articles: &[LocalArticle]) -> AppResult<()> {
     let options = SimpleFileOptions::default()
         .compression_method(CompressionMethod::Deflated)
         .unix_permissions(0o644);
-    let mut occurrences = HashMap::new();
+    let mut used_names = HashSet::new();
 
     for article in articles {
         archive.start_file(
-            unique_markdown_file_name(article, &mut occurrences),
+            unique_markdown_file_name(article, &mut used_names),
             options,
         )?;
         archive.write_all(article.markdown.as_bytes())?;
@@ -142,5 +152,35 @@ mod tests {
             archive.by_index(1).expect("second").name(),
             "同名文章 (2).md"
         );
+    }
+
+    #[test]
+    fn zip_names_do_not_collide_with_existing_numbered_titles() {
+        let directory = tempfile::tempdir().expect("temp dir");
+        let path = directory.path().join("articles.zip");
+        let articles = [
+            article("A", "one"),
+            article("A", "two"),
+            article("A (2)", "three"),
+            article("a", "four"),
+            article("Café", "five"),
+            article("Cafe\u{301}", "six"),
+        ];
+        write_articles_zip(&path, &articles).expect("write zip");
+        let mut archive = zip::ZipArchive::new(File::open(path).expect("open zip"))
+            .expect("read zip");
+        assert_eq!(archive.len(), articles.len());
+        let mut names = std::collections::HashSet::new();
+        for (index, expected) in articles.iter().enumerate() {
+            let mut entry = archive.by_index(index).expect("entry");
+            let key = DecomposingNormalizerBorrowed::new_nfd()
+                .normalize(&entry.name().to_lowercase())
+                .into_owned();
+            assert!(names.insert(key));
+            let mut markdown = String::new();
+            std::io::Read::read_to_string(&mut entry, &mut markdown)
+                .expect("read source");
+            assert_eq!(markdown, expected.markdown);
+        }
     }
 }
