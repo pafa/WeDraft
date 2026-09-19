@@ -216,12 +216,40 @@ export function ArticleEditor({
   const editorShellRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const shortcutBarRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const applyingScrollRef = useRef(false);
   const scrollFrameRef = useRef<number | null>(null);
   const appliedContentSyncRevisionRef = useRef<number | null>(null);
   const autoScrolledPreviewBlockRef = useRef<number | null>(null);
   const [imageBusy, setImageBusy] = useState(false);
+  useLayoutEffect(() => {
+    if (!compactHeader) return;
+    const bar = shortcutBarRef.current;
+    if (!bar) return;
+    let previousWidth = -1;
+    const fit = () => {
+      const width = bar.clientWidth;
+      if (!width) return;
+      previousWidth = width;
+      // Measure expanded labels synchronously, then settle before painting.
+      bar.dataset.iconOnly = "false";
+      const style = getComputedStyle(bar);
+      const buttons = [...bar.querySelectorAll<HTMLButtonElement>("button")];
+      const required = buttons.reduce((sum, button) => sum + button.getBoundingClientRect().width, 0)
+        + Math.max(0, buttons.length - 1) * parseFloat(style.columnGap);
+      const available = width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      bar.dataset.iconOnly = String(required > available);
+    };
+    fit();
+    const observer = new ResizeObserver(() => {
+      if (bar.clientWidth !== previousWidth) fit();
+    });
+    observer.observe(bar);
+    let disposed = false;
+    void document.fonts.ready.then(() => { if (!disposed) fit(); });
+    return () => { disposed = true; observer.disconnect(); };
+  }, [compactHeader, imageBusy]);
   const [imageError, setImageError] = useState("");
   const [imageNotice, setImageNotice] = useState<{
     message: string;
@@ -635,7 +663,7 @@ export function ArticleEditor({
           </button>
         </div>
       </div>
-      <div className="markdown-shortcut-bar" aria-label="Markdown 快捷格式">
+      <div ref={shortcutBarRef} className="markdown-shortcut-bar" aria-label="Markdown 快捷格式">
         <div className="markdown-shortcut-list">
           {markdownShortcuts.map(
             ({
@@ -730,12 +758,12 @@ export function ArticleEditor({
             <span className="shortcut-label">重做</span>
           </button>
         </div>
-        <span
+        {!compactHeader && (<span
           className="article-character-count"
           aria-label={`文章总字数 ${characterCount.toLocaleString()} 字`}
         >
           总字数 {characterCount.toLocaleString()} 字
-        </span>
+        </span>)}
       </div>
       <div className="markdown-editor-shell" ref={editorShellRef}>
         <div className="markdown-editor-measure" ref={measureRef} aria-hidden>
@@ -843,7 +871,7 @@ export function ArticleEditor({
           })}
         </div>
       </div>
-      <div className="editor-footer">
+      <div className={`editor-footer${compactHeader ? " editor-status" : ""}`}>
         {demoActive ? <span>示例内容不会保存或复制</span> : null}
         {imageError || rulesError ? (
           <span className="field-error">{imageError || rulesError}</span>
@@ -853,7 +881,14 @@ export function ArticleEditor({
             {imageNotice.message}
           </span>
         ) : null}
+      {compactHeader && <span
+          className="article-character-count"
+          aria-label={`文章总字数 ${characterCount.toLocaleString()} 字`}
+        >
+          总字数 {characterCount.toLocaleString()} 字
+        </span>}
       </div>
+
       {pendingImage ? (
         <div
           className="confirm-dialog-backdrop"

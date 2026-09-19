@@ -139,23 +139,15 @@
   .web-app .preview-switcher button { padding-right: 4px; padding-left: 4px; }
 }
 
-/* Respond to the editor pane, not the window: split views can be narrow too. */
-.web-workspace .editor-column { container-type: inline-size; container-name: editor-pane; }
-.web-app .markdown-shortcut-bar { flex-wrap: wrap; align-items: center; gap: 8px; overflow: visible; padding: 8px 12px; }
-.web-app .markdown-shortcut-list { flex: 1 1 100%; flex-wrap: wrap; gap: 6px; overflow: visible; }
-.web-app .markdown-shortcut-item { gap: 0; }
+/* One action group. Labels appear only when all actions fit on one row. */
+.web-app .markdown-shortcut-bar { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 4px; overflow: visible; padding: 6px 12px; min-height: 44px; }
+.web-app .markdown-shortcut-list,
+.web-app .markdown-shortcut-item,
+.web-app .markdown-history-actions { display: contents; }
 .web-app .markdown-shortcut-divider { display: none; }
-.web-app .markdown-shortcut-button { height: 34px; min-height: 34px; padding: 0 9px; white-space: nowrap; }
-.web-app .markdown-history-actions { margin-left: auto; padding-left: 0; border-left: 0; gap: 6px; }
-.web-app .markdown-history-button { width: auto; overflow: visible; gap: 4px; font-size: var(--ui-text-caption); }
-.web-app .article-character-count { padding-left: 8px; }
-@container editor-pane (max-width: 760px) {
-  .web-app .markdown-shortcut-list { flex-basis: 100%; }
-  .web-app .markdown-shortcut-button .shortcut-label { display: none; }
-  .web-app .markdown-shortcut-button { width: 36px; height: 36px; min-height: 36px; padding: 0; gap: 0; }
-  .web-app .markdown-shortcut-button svg { width: 16px; height: 16px; }
-}
-@container editor-pane (min-width: 620px) and (max-width: 760px) {
-  .web-app .markdown-shortcut-list { flex: 1 1 0; }
-  .web-app .article-character-count { flex-basis: 100%; padding: 0; border: 0; text-align: right; }
-}
+.web-app .markdown-shortcut-button { flex: 0 0 auto; width: auto; height: 32px; min-height: 32px; padding: 0 8px; gap: 4px; overflow: visible; font-size: var(--ui-text-caption); white-space: nowrap; }
+.web-app .markdown-shortcut-button svg { width: 16px; height: 16px; flex-shrink: 0; }
+.web-app .markdown-shortcut-bar[data-icon-only="true"] .shortcut-label { display: none; }
+.web-app .markdown-shortcut-bar[data-icon-only="true"] .markdown-shortcut-button { width: 32px; padding: 0; gap: 0; }
+.web-app .editor-status { flex-shrink: 0; display: flex; justify-content: flex-end; padding: 4px 16px; border-top: 1px solid var(--line); background: #fffdfa; }
+.web-app .editor-status .article-character-count { padding: 0; border: 0; font-size: var(--ui-text-caption); font-weight: 400; margin-left: auto; }

@@ -382,20 +382,26 @@ try {
       assert(await editor.isVisible());
     }
   }
-  for (const width of [1920, 1440, 1100, 900, 760, 600, 390, 320]) {
+  for (const width of [2560, 1920, 1440, 1100, 900, 760, 600, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await page.getByRole("button", { name: "编辑原稿", exact: true }).isVisible().then(async visible => { if (visible) await page.getByRole("button", { name: "编辑原稿", exact: true }).click(); });
     const bar = page.locator(".markdown-shortcut-bar");
     const geometry = await bar.evaluate(element => {
       const bounds = element.getBoundingClientRect();
-      const list = element.querySelector(".markdown-shortcut-list");
-      return { fits: [...element.querySelectorAll("button")].every(button => { const r = button.getBoundingClientRect(); return r.left >= bounds.left && r.right <= bounds.right + 1 && r.top >= bounds.top && r.bottom <= bounds.bottom + 1; }), overflow: getComputedStyle(list).overflowX, scroll: list.scrollWidth > list.clientWidth + 1 };
+      const list = element;
+      const rows = new Set([...element.querySelectorAll("button")].map(button => Math.round(button.getBoundingClientRect().top))).size;
+      return { rows, iconOnly: element.dataset.iconOnly === "true", fits: [...element.querySelectorAll("button")].every(button => { const r = button.getBoundingClientRect(); return r.left >= bounds.left && r.right <= bounds.right + 1 && r.top >= bounds.top && r.bottom <= bounds.bottom + 1; }), overflow: getComputedStyle(list).overflowX, scroll: list.scrollWidth > list.clientWidth + 1 };
     });
     assert(geometry.fits, `all toolbar actions fit at ${width}px`);
     assert(!geometry.scroll && geometry.overflow !== "auto" && geometry.overflow !== "scroll");
     assert.equal(await bar.locator("button").count(), 15);
+    assert(geometry.rows <= 2, `toolbar has at most two rows at ${width}px`);
+    assert(geometry.iconOnly || geometry.rows === 1, "expanded labels must fit one row");
+    assert.equal(await bar.locator(".article-character-count").count(), 0);
+    assert(await page.locator(".editor-status .article-character-count").isVisible());
+    if ([2560, 1440, 320].includes(width)) await page.screenshot({ path: join(evidence, `toolbar-${width}.png`) });
   }
-  check("All 15 editor actions remain visible without toolbar scrolling from 320px to 1920px");
+  check("All 15 actions form one group, dynamically switch labels, stay within two rows from 320px to 2560px, with word count in the footer");
   await editor.fill("我的文章\n\n自己的正文");
   await page.getByRole("link", { name: "WeDraft 首页", exact: true }).click();
   await waitFor(async () => await editor.inputValue() === initialSample);
