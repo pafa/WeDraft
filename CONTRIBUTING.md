@@ -2,9 +2,7 @@
 
 欢迎改进排版、修复问题、补充教程，或设计新的模板。小改动可以直接准备候选；涉及文章格式、存储、外部服务或新的渲染结构时，先说明具体场景和预期结果。
 
-正式公开的目标是现有仓库 [pafa/WeDraft](https://github.com/pafa/WeDraft)，不另外建立社区仓库。当前它仍是私有源码备份，以下入口为后续公开协作准备：发布后可在 [Issue 表单](https://github.com/pafa/WeDraft/issues/new/choose) 反馈问题或提交模板，在 [Pull requests](https://github.com/pafa/WeDraft/pulls) 提交实现。
-
-当前尚未对外开放投稿，项目许可证已选定为 [MIT](LICENSE)。公开切换和正式版本以维护者确认的发布为准。已有协作者继续遵守 [本地 Git 与审阅规则](docs/git-workflow.md)，所有合并通过 PR，注明变更和验证；不要求 Actions。
+WeDraft 已采用 [MIT](LICENSE) 开源。可在 [Issue 表单](https://github.com/pafa/WeDraft/issues/new/choose) 反馈问题或提议模板，Fork [pafa/WeDraft](https://github.com/pafa/WeDraft) 后提交 PR。
 
 ## 选择入口
 
@@ -16,17 +14,19 @@
 
 ## 本地开始
 
-从已获访问权限的源码副本开始。工具链以 `.node-version` 和 `package.json` 的 `packageManager` 为准；使用 pnpm，保留现有锁文件。
+先在 GitHub Fork 仓库，将下例 `YOUR_USERNAME` 替换为自己的用户名，克隆 Fork，再建立任务分支。工具链以 `.node-version` 和 `package.json` 的 `packageManager` 为准；使用 pnpm，保留现有锁文件。
 
 ```sh
+git clone https://github.com/YOUR_USERNAME/WeDraft.git
+cd WeDraft
+git switch -c feat/my-change
 pnpm install --frozen-lockfile
-./scripts/setup-git
 pnpm dev:web
 ```
 
 页面地址以终端输出为准，默认是 `http://127.0.0.1:1432/`。网页、CLI 和 MCP 的开发不需要 Rust 或微信凭据。修改原生功能时，另外按 [使用指南](docs/user-guide.md) 准备 macOS / Rust 工具链。
 
-改动前检查工作目录、分支与已有改动。新任务从已确认的 `main` 建立 `codex/feat/<topic>`、`codex/fix/<topic>` 或 `codex/chore/<topic>` 分支；已有任务继续原分支。保留他人修改，不直接提交到 `main`，不要将文章数据、导出文件、安装包或本地配置纳入提交。
+改动前检查工作目录、分支与已有改动。新任务从最新 `main` 建立自己的功能或修复分支；已有任务继续原分支。`codex/` 是维护者内部 Agent 的命名约定，社区分支不要求该前缀。保留他人修改，不直接提交到 `main`，不要将文章数据、导出文件、安装包或本地配置纳入提交。
 
 ## 验证你的改动
 
@@ -73,7 +73,9 @@ pnpm build:mac
 - 内容保真与渲染测试；实际微信检查情况，未检查的明确标注。
 - 作者、参考来源及素材许可信息；来源或使用权限不清楚的素材先不纳入。
 
-维护者依次检查范围、内容保真、模板兼容性和实际效果。反馈继续更新同一候选；批准当前候选后才合入和发布。所有合并使用 PR；完整 diff 审阅、明确批准和源码备份流程按 [Git 规则](docs/git-workflow.md) 执行。
+提交后推送到自己的 Fork，在 GitHub 创建目标为 `pafa/WeDraft:main` 的 PR，反馈继续更新同一分支。维护者检查范围、内容保真、模板兼容性和实际效果，审阅批准后合并；部署与软件发行另行决定。
+
+维护者工作区遵循 [Git 规则](docs/git-workflow.md)，并运行 `./scripts/setup-git` 安装本地保护钩子。`./scripts/backup` 固定备份至 `pafa/WeDraft`，是维护者工具；Fork 贡献者使用普通 `git push origin <分支名>`，不需要运行此备份脚本。
 
 ## 保持产品边界
 

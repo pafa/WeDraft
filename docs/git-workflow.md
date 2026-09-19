@@ -34,7 +34,13 @@
 - 源码、测试、主题、内置图片、图标、配置、提示词及两个锁文件入 Git。`node_modules`、`target`、`dist`、安装包、文章数据库、用户图片缓存、导出稿、密钥和本机工具状态不入 Git。
 - GitHub 不备份未提交工作、安装包或文章历史。安装包与发布记录保存在本地忽略目录；重要文章数据由维护者自己的本地备份方案保护。本流程不修改 `~/Library/Application Support/com.wedraft.desktop/`。
 
-## 本地版本与发布
+## Web / AI 版本与部署
+
+Web / CLI / MCP 的版本独立于 Mac 基线；发布修复时使用补丁版本，同步网页与工具 package 版本、core 引擎版本、构建 manifest 和相应测试。文章包 schema 与模板版本只在各自兼容协议变化时调整。文档维护不升级软件版本；具体部署的源提交由线上 [`release.json`](https://wedraft.xiaoha.org/release.json) 标识。
+
+部署从已批准且干净的 main 生成站点和安装资源，执行标准验证及相关浏览器/CLI/MCP 检查，保存完整源 SHA、产物校验和与回退目录。部署需单独批准；执行和线上校验见[部署指南](deployment.md)。Web / AI 部署不自动创建 Git 标签、npm 包或 Mac 安装包。
+
+## Mac 版本与发行
 
 1. 在发布准备分支选择版本号：兼容修复升 PATCH，新功能升 MINOR，不兼容变更升 MAJOR。同步根和 desktop 的 `package.json`、`Cargo.toml`、`Cargo.lock` 中 wedraft 项、`tauri.conf.json`、`src/version.ts`、版本测试及 README 的版本/日期，补齐 CHANGELOG。内部 `packages/*` 不单独发布，不强行统一版本号。
 2. 完成本地验证和 PR 审阅，维护者批准后通过 PR 合入 `main` 并同步本地。记录合并后完整 SHA。在这个干净提交上重新执行标准验证、锁定 Rust 测试及 `pnpm build:mac`；不能把旧构建与新 SHA 拼成发布记录。
@@ -43,7 +49,7 @@
 5. 获准后创建注释标签 `git tag -a vX.Y.Z 完整SHA -m 'WeDraft X.Y.Z'`，确认本地与 PR 合并后的远端 `main` 一致，再 `git push origin refs/tags/vX.Y.Z` 并核对远端标签。GitHub 只保留源码版本，不自动创建 Release、上传安装包或分发。
 6. 版本标签和正式包不可覆盖；问题通过新版本修复。代码回退在任务分支 `git revert`，检查和批准后合并；应用回退前保护本地数据，不随软件降级自动回退数据库。
 
-当前应用仍为 1.1.2，采用 ad-hoc 签名，未做 Developer ID 公证。建立 Git 管理不升级应用、不追溯创建旧标签、不替换已安装软件，也不引入证书或外部服务。
+当前 Mac 应用基线仍为 1.1.2，采用 ad-hoc 签名，未做 Developer ID 公证。建立 Git 管理不升级应用、不追溯创建旧标签、不替换已安装软件，也不引入证书或外部服务。
 
 ## 产品说明与 GitHub 首页
 
