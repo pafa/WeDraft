@@ -155,15 +155,15 @@ try {
   await page.getByRole("link", { name: "更多模板" }).click();
   await page.getByRole("heading", { name: "模板库", exact: true }).waitFor();
   assert.equal(new URL(page.url()).hash, "#/templates");
-  assert.equal(await page.locator(".template-card").count(), 7);
+  assert.equal(await page.locator(".template-card:not(.template-contribution-card)").count(), 7);
   for (const [, name] of templates) assert(await page.getByRole("heading", { name, exact: true }).isVisible());
   assert.equal(await page.getByRole("searchbox").count(), 0);
   assert.equal(await page.getByLabel("搜索模板").count(), 0);
   assert.equal(await page.locator(".template-grid").evaluate(element => getComputedStyle(element).gridTemplateColumns.split(" ").length), 4);
-  await page.getByRole("button", { name: "添加模板", exact: true }).click();
-  await page.getByRole("dialog", { name: "添加模板", exact: true }).waitFor();
-  assert.equal(await page.getByRole("link", { name: "前往 GitHub" }).getAttribute("href"), "https://github.com/pafa/WeDraft");
-  await page.getByRole("button", { name: "关闭添加说明" }).click();
+  assert.equal(await page.locator(".template-grid > .template-card").count(), 8);
+  assert.equal(await page.getByRole("link", { name: "在 GitHub 添加模板" }).getAttribute("href"), "https://github.com/pafa/WeDraft");
+  assert.equal(await page.locator(".template-grid > :last-child").getAttribute("aria-label"), "在 GitHub 添加模板");
+  assert.equal(await page.getByRole("dialog", { name: "添加模板", exact: true }).count(), 0);
   await page.getByRole("button", { name: "预览青岚", exact: true }).click();
   await page.getByRole("dialog", { name: "青岚完整排版" }).waitFor();
   await page.getByRole("button", { name: "关闭模板预览" }).click();
@@ -205,8 +205,8 @@ try {
   await page.locator(".connect-panel").scrollIntoViewIfNeeded();
   await page.screenshot({ path: join(evidence, "ai-connect-desktop.png") });
   await page.getByRole("link", { name: "返回编辑", exact: true }).click();
-  await waitFor(async () => await editor.inputValue() === editedSample);
-  check("AI integration has separate manual and automatic paths with a one-step setup prompt; returning retains source");
+  await waitFor(async () => await editor.inputValue() === initialSample);
+  check("AI integration has separate manual and automatic paths with a one-step setup prompt; returning opens the home sample");
 
   await importer.setInputFiles(bundle);
   await waitFor(async () => (await editor.inputValue()) === original.replaceAll("\r\n", "\n"));
@@ -382,6 +382,30 @@ try {
       assert(await editor.isVisible());
     }
   }
+  for (const width of [1920, 1440, 1100, 900, 760, 600, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.getByRole("button", { name: "编辑原稿", exact: true }).isVisible().then(async visible => { if (visible) await page.getByRole("button", { name: "编辑原稿", exact: true }).click(); });
+    const bar = page.locator(".markdown-shortcut-bar");
+    const geometry = await bar.evaluate(element => {
+      const bounds = element.getBoundingClientRect();
+      const list = element.querySelector(".markdown-shortcut-list");
+      return { fits: [...element.querySelectorAll("button")].every(button => { const r = button.getBoundingClientRect(); return r.left >= bounds.left && r.right <= bounds.right + 1 && r.top >= bounds.top && r.bottom <= bounds.bottom + 1; }), overflow: getComputedStyle(list).overflowX, scroll: list.scrollWidth > list.clientWidth + 1 };
+    });
+    assert(geometry.fits, `all toolbar actions fit at ${width}px`);
+    assert(!geometry.scroll && geometry.overflow !== "auto" && geometry.overflow !== "scroll");
+    assert.equal(await bar.locator("button").count(), 15);
+  }
+  check("All 15 editor actions remain visible without toolbar scrolling from 320px to 1920px");
+  await editor.fill("我的文章\n\n自己的正文");
+  await page.getByRole("link", { name: "WeDraft 首页", exact: true }).click();
+  await waitFor(async () => await editor.inputValue() === initialSample);
+  await editor.click();
+  assert.equal(await editor.inputValue(), "");
+  await editor.fill("第二篇文章");
+  await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "接入 AI" }).click();
+  await page.getByRole("link", { name: "打开网页编辑器" }).click();
+  await waitFor(async () => await editor.inputValue() === initialSample);
+  check("Logo and AI home links restore the sample; only focusing the gray source starts a blank editor");
   check("Global header stays fixed while pages scroll; new and import work from both discovery pages on desktop and mobile");
   assert.deepEqual(report.errors, []);
   assert.deepEqual(report.consoleErrors, []);

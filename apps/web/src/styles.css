@@ -606,10 +606,14 @@
 .template-card { padding: 16px 14px 10px; }
 .template-card-heading { margin-bottom: 12px; }
 .template-card-heading h2 { font-size: 20px; }
-.add-template { display: grid; place-items: center; width: 56px; height: 56px; margin: 26px auto 0; border: 1px dashed #c9cec2; border-radius: 12px; background: transparent; color: #74806e; cursor: pointer; }
-.add-template:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-.template-contribution-copy { max-width: 380px; margin: 22px 0; color: #73776e; font-size: 15px; line-height: 1.9; }
 @media (max-width: 1000px) { .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .template-grid { grid-template-columns: minmax(0, 1fr); } .template-title { font-size: 22px; } }
 
 .global-action-error { flex-shrink: 0; margin: 0; padding: 8px 20px; color: var(--danger); background: #fff4ee; font-size: 13px; }
+
+.template-grid { grid-auto-rows: 1fr; }
+.template-contribution-card { display: flex; flex-direction: column; border-top-color: #c7cfc2; }
+.contribution-preview { display: grid; place-items: center; flex-shrink: 0; color: #82927b; border: 1px dashed #cbd3c5; background: transparent; transition: background .15s, color .15s; }
+.template-contribution-card:hover .contribution-preview { color: var(--accent); background: #eaf0e5; }
+.contribution-caption { margin: 13px 0 0; color: #737e6b; font-size: var(--ui-text-caption); line-height: 1.6; }
+.contribution-caption svg { display: inline; vertical-align: middle; }

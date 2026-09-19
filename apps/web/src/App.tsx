@@ -26,11 +26,6 @@ export function App() {
   const [defaultTemplate, setDefaultTemplate] = useState(() => readDefaultTemplate(document.cookie));
   const [route, setRoute] = useState(() => window.location.hash.slice(1) || "/");
   useEffect(() => {
-    const update = () => setRoute(window.location.hash.slice(1) || "/");
-    window.addEventListener("hashchange", update);
-    return () => window.removeEventListener("hashchange", update);
-  }, []);
-  useEffect(() => {
     document.title = `${route === "/templates" ? "模板库" : route === "/ai" ? "接入 AI" : "文章排版"} · WeDraft`;
     if (route === "/templates") setDefaultTemplate(readDefaultTemplate(document.cookie));
   }, [route]);
@@ -46,6 +41,7 @@ export function App() {
   const [activeBlock, setActiveBlock] = useState<{ blockIndex: number; origin: "editor" | "preview" } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const initialized = useRef(false);
+  const preserveNextHome = useRef(false);
   const showingDemo = demoActive && !store.markdown;
   const article = useMemo(() => ({ markdown: store.markdown, templateId: store.settings.defaultTemplateId,
     author: store.author, digest: store.digest, sourceUrl: store.sourceUrl, assets }),
@@ -68,6 +64,29 @@ export function App() {
     setAssets(input.assets); setDemoActive(false); setActiveBlock(null); setContentSync(null);
     setCopyConfirm(false); setMessage(""); setMessageError(false);
   }, []);
+
+  const showHomeSample = useCallback(() => {
+    load(articleInputSchema.parse({ markdown: "", templateId: readDefaultTemplate(document.cookie) }));
+    setDemoActive(true); setMobilePanel("editor"); setDialog(null);
+  }, [load]);
+
+  function openEditor() {
+    const changingRoute = window.location.hash !== "#/";
+    preserveNextHome.current = changingRoute;
+    setMobilePanel("editor");
+    window.location.hash = "/";
+  }
+
+  useEffect(() => {
+    const update = () => {
+      const next = window.location.hash.slice(1) || "/";
+      if (next === "/" && !preserveNextHome.current) showHomeSample();
+      preserveNextHome.current = false;
+      setRoute(next);
+    };
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, [showHomeSample]);
 
   useEffect(() => {
     if (initialized.current) return;
@@ -95,7 +114,7 @@ export function App() {
         ? articleInputSchema.parse(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)))
         : articleInputSchema.parse({ markdown: new TextDecoder("utf-8", { fatal: true }).decode(bytes), templateId: store.settings.defaultTemplateId });
       renderArticle(input);
-      load(input); setMobilePanel("editor"); window.location.hash = "/";
+      load(input); openEditor();
       notify(`已导入 ${file.name}，可以继续编辑。`); setDialog(null);
     } catch (error) { notify(error instanceof Error ? error.message : "导入失败，当前文章未被替换。", true); }
   }
@@ -143,20 +162,27 @@ export function App() {
       const remembered = readDefaultTemplate(document.cookie) === id;
       if (remembered) setDefaultTemplate(id);
       store.setSettings({ ...store.settings, defaultTemplateId: id });
-      window.location.hash = "/";
+      openEditor();
       notify(remembered ? "已设为默认模板，下次打开继续使用。" : "已应用模板。浏览器未允许记住选择，下次需要重新选择。", !remembered);
     } catch (error) { notify(String(error), true); }
   }
 
   if (!ready) return <div className="app-loading">正在打开 WeDraft…</div>;
   return <div className="web-app" data-mobile-panel={mobilePanel} data-page={editing ? "editor" : route.slice(1)}
+    onClickCapture={(event) => {
+      if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.target instanceof Element && event.target.closest('a[href="#/"]')) {
+        preserveNextHome.current = false;
+        if (window.location.hash === "#/" || !window.location.hash) showHomeSample();
+      }
+    }}
     onDragOver={(event) => { if (editing && event.dataTransfer.types.includes("Files")) event.preventDefault(); }}
     onDrop={(event) => { const file = event.dataTransfer.files[0]; if (editing && file) { event.preventDefault(); void importFile(file); } }}>
     <header className="web-header">
       <div className="brand-family"><a href="#/" className="brand" aria-label="WeDraft 首页"><img className="brand-icon" src={`${import.meta.env.BASE_URL}app-icon.png`} width="32" height="32" alt="WeDraft 应用图标" /><strong>WeDraft</strong></a><a className="publisher-brand" href="https://xiaoha.org" target="_blank" rel="noreferrer" aria-label="小哈公社出品"><img src={`${import.meta.env.BASE_URL}xiaoha-logo.png`} width="20" height="20" alt="" /><span>小哈公社出品</span></a></div>
       <nav aria-label="主导航"><a href="#/" aria-current={editing ? "page" : undefined}>编辑器</a><a href="#/templates" aria-current={route === "/templates" ? "page" : undefined}><Palette size={16} />模板库</a><a href="#/ai" aria-current={route === "/ai" ? "page" : undefined}><Sparkles size={16} />接入 AI</a></nav>
       <div className="document-actions">
-      <button className="web-action" onClick={() => { load(articleInputSchema.parse({ markdown: "", templateId: readDefaultTemplate(document.cookie) })); setMobilePanel("editor"); window.location.hash = "/"; }}><FilePlus2 size={16} />新建</button>
+      <button className="web-action" onClick={() => { load(articleInputSchema.parse({ markdown: "", templateId: readDefaultTemplate(document.cookie) })); openEditor(); }}><FilePlus2 size={16} />新建</button>
       <button className="web-action" onClick={() => fileInput.current?.click()}><FolderOpen size={16} />导入</button>
     </div>
       <input ref={fileInput} type="file" accept=".md,.markdown,.txt,.json,.zip" aria-label="导入文章文件" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void importFile(file); }} />

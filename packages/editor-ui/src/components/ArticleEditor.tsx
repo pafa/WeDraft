@@ -666,6 +666,7 @@ export function ArticleEditor({
                     type="button"
                     className={`markdown-shortcut-button${active ? " active" : ""}`}
                     title={title}
+                    aria-label={id === "image" && imageBusy ? "处理中…" : label}
                     aria-pressed={
                       toggleShortcuts.has(id) ? active : undefined
                     }
@@ -684,7 +685,7 @@ export function ArticleEditor({
                     }}
                   >
                     <Icon size={13} />
-                    {id === "image" && imageBusy ? "处理中…" : label}
+                    <span className="shortcut-label">{id === "image" && imageBusy ? "处理中…" : label}</span>
                   </button>
                 </div>
               );
@@ -708,7 +709,7 @@ export function ArticleEditor({
             }}
           >
             <Undo2 size={14} />
-            撤回
+            <span className="shortcut-label">撤回</span>
           </button>
           <button
             type="button"
@@ -726,7 +727,7 @@ export function ArticleEditor({
             }}
           >
             <Redo2 size={14} />
-            重做
+            <span className="shortcut-label">重做</span>
           </button>
         </div>
         <span

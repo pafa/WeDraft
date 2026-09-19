@@ -32,14 +32,13 @@ const example = `# 让内容，自然地被读懂
 1. [WeDraft 排版示例](https://example.com)
 `;
 
-function TemplateDetail({ name, onClose, children, articlePreview = true }: { name: string; onClose: () => void; children: ReactNode; articlePreview?: boolean }) {
+function TemplateDetail({ name, onClose, children }: { name: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
-  return <dialog ref={ref} className="template-detail-overlay" aria-label={articlePreview ? `${name}完整排版` : name} onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) ref.current?.close(); }}><section className="template-detail"><div className="dialog-heading"><h2>{name}</h2><button autoFocus className="web-icon-button" aria-label={articlePreview ? "关闭模板预览" : "关闭添加说明"} onClick={() => ref.current?.close()}><X size={20} /></button></div>{children}</section></dialog>;
+  return <dialog ref={ref} className="template-detail-overlay" aria-label={`${name}完整排版`} onClose={onClose} onClick={(event) => { if (event.target === event.currentTarget) ref.current?.close(); }}><section className="template-detail"><div className="dialog-heading"><h2>{name}</h2><button autoFocus className="web-icon-button" aria-label="关闭模板预览" onClick={() => ref.current?.close()}><X size={20} /></button></div>{children}</section></dialog>;
 }
 
 export function TemplatesPage({ defaultId, currentId, onChoose }: { defaultId: string; currentId: string; onChoose: (id: string) => void }) {
-  const [contributing, setContributing] = useState(false);
   const [detail, setDetail] = useState<string | null>(null);
   const previews = useMemo(() => new Map(catalog.map((template) => [template.id, renderArticle({ markdown: example, templateId: template.id }).previewHtml])), []);
   const selected = catalog.find((template) => template.id === detail);
@@ -49,9 +48,11 @@ export function TemplatesPage({ defaultId, currentId, onChoose }: { defaultId: s
       <div className="template-card-heading"><h2>{template.name}</h2>{template.id === defaultId && <span className="default-badge"><Check size={12} />默认</span>}</div>
       <button className="template-preview" aria-label={`预览${template.name}`} onClick={() => setDetail(template.id)}><div aria-hidden inert className="template-preview-content" dangerouslySetInnerHTML={{ __html: previews.get(template.id) ?? "" }} /><span className="preview-open">查看完整排版 <ArrowUpRight size={15} /></span></button>
       <div className="template-card-actions"><span>{currentId === template.id ? "当前使用" : ""}</span><button className="web-action" onClick={() => onChoose(template.id)}>设为默认并使用</button></div>
-    </article>)}</div>
-    <button className="add-template" aria-label="添加模板" title="添加模板" onClick={() => setContributing(true)}><Plus size={26} /></button>
-    {contributing && <TemplateDetail name="添加模板" articlePreview={false} onClose={() => setContributing(false)}><p className="template-contribution-copy">Fork WeDraft 项目，设计并添加你的模板。欢迎提交 PR，让模板库更丰富。</p><a className="button primary" href="https://github.com/pafa/WeDraft" target="_blank" rel="noreferrer">前往 GitHub <ArrowUpRight size={16} /></a></TemplateDetail>}
+    </article>)}<a className="template-card template-contribution-card" href="https://github.com/pafa/WeDraft" target="_blank" rel="noreferrer" aria-label="在 GitHub 添加模板">
+      <div className="template-card-heading"><h2>添加模板</h2></div>
+      <div className="template-preview contribution-preview"><Plus size={44} strokeWidth={1.25} aria-hidden /></div>
+      <p className="contribution-caption">Fork 项目，设计自己的模板。<br />欢迎提交 PR，共建模板库。 <ArrowUpRight size={12} aria-hidden /></p>
+    </a></div>
     {selected && <TemplateDetail name={selected.name} onClose={() => setDetail(null)}><div className="template-detail-article" dangerouslySetInnerHTML={{ __html: previews.get(selected.id) ?? "" }} /><button className="button primary" onClick={() => onChoose(selected.id)}>设为默认并使用</button></TemplateDetail>}
   </main>;
 }
