@@ -183,6 +183,7 @@ export function ArticleEditor({
   onActiveBlockChange,
   onImagePreviewReady,
   prepareImage,
+  compactHeader = false,
   persistenceHint = "复制后进入文章历史",
   imageProcessingHint = "JPG / PNG / WEBP 会在本机自动检测并优化；GIF 保留动画。",
 }: {
@@ -200,6 +201,7 @@ export function ArticleEditor({
   onActiveBlockChange: (blockIndex: number | null) => void;
   onImagePreviewReady: (localPath: string, dataUrl: string) => void;
   prepareImage?: (file: File) => Promise<{ url: string; dataUrl: string; notice: string }>;
+  compactHeader?: boolean;
   persistenceHint?: string;
   imageProcessingHint?: string;
 }) {
@@ -631,11 +633,11 @@ export function ArticleEditor({
       <div className="column-header">
         <div>
           <span className="eyebrow">PASTE & FORMAT</span>
-          <h2>粘贴文章</h2>
+          <h2>{compactHeader ? "编辑原稿" : "粘贴文章"}</h2>
         </div>
-        <span className="autosave-label">{persistenceHint}</span>
+        {compactHeader ? <button type="button" className={`text-button${rulesCopied ? " success" : ""}`} onClick={() => void copyMarkdownRules()}><ClipboardCopy size={14} />{rulesCopied ? "规则已复制" : "复制 Markdown 规则"}</button> : <span className="autosave-label">{persistenceHint}</span>}
       </div>
-      <div className="editor-toolbar">
+      <div className="editor-toolbar" hidden={compactHeader}>
         <span>
           <Sparkles size={14} />
           {demoActive

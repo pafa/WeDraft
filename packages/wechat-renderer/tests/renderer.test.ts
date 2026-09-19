@@ -41,10 +41,11 @@ describe("renderWechatHtml", () => {
     expect(html).toContain('data-wedraft-block-index="0"');
   });
 
-  it("只提供小哈公社和小哈公社New两种模板", () => {
+  it("提供两版小哈公社与五版阅读模板", () => {
     expect(availableTemplates.map((template) => template.id)).toEqual([
       "default-business",
       "next-edition",
+      "plain-paper", "ink-journal", "jade-notes", "blueprint", "cinnabar",
     ]);
     expect(getTemplateById("next-edition").name).toBe("小哈公社New");
     expect(getTemplateById("missing")).toBe(defaultTemplate);

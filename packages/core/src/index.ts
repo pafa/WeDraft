@@ -32,6 +32,8 @@ export type LocatedIssue = ContentIssue & { startLine?: number; endLine?: number
 export function listTemplates() {
   return availableTemplates.map((template) => ({
     id: template.id, name: template.name, version: TEMPLATE_VERSION,
+    description: template.description ?? (template.id === "next-edition" ? "清爽绿调 · 适合日常文章与资讯" : "经典暖色 · 适合观点与品牌文章"),
+    accentColor: template.accentColor ?? (template.id === "next-edition" ? "#3F7669" : "#D58028"),
     default: template.id === DEFAULT_TEMPLATE_ID, target: "wechat" as const,
   }));
 }

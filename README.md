@@ -28,7 +28,7 @@ pnpm build:tools
 node packages/cli/dist/cli.mjs --help
 ```
 
-网页和工具只需 Node / pnpm，不需要 Rust 或微信凭据。网页版在当前浏览器自动保存草稿，文章包包含原稿、模板和本地图片；不读取现有 Mac 数据库。
+上述源码运行方式需要 Node / pnpm，不需要 Rust 或微信凭据。网站的“一条命令接入”会自动准备工具，无需另装 pnpm。网页版直接打开可编辑示例，在当前浏览器自动保存草稿；独立模板库提供七款模板并记住默认选择，独立 AI 页面提供 Skill / MCP 接入。文章包包含原稿、模板和本地图片；不读取现有 Mac 数据库。
 
 [网页指南](docs/web-guide.md) · [AI / MCP / Skill 接入](docs/ai-integration.md) · [开源管理安排](docs/open-source-plan.md)
 

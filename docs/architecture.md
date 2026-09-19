@@ -17,6 +17,8 @@
 - CLI 明确处理文件输入、受限图片根目录与新目录输出；stdout JSON、stderr 错误，不覆盖旧目录。
 - MCP 使用官方 SDK 的 stdio transport。默认三个纯工具，只有显式配置输出目录才提供 `export_article` 写文件工具；无 HTTP 服务、任意文件读取工具或微信发布能力。
 - 文章包不在文件系统解压：只读受限大小、数量与路径的 ZIP 条目，检查 manifest 版本、图片类型、重复路径、UTF-8 和缺失资产。无法处理的 Markdown 阻止正式 HTML 输出，保留原稿用于修复。
+- 网页使用 hash 路由分隔编辑器、模板库、AI 接入；七款模板共用目录，默认选择存入 Cookie，已有文章保留自身模板。手机预览固定逻辑尺寸，等比缩放后仍用逻辑坐标进行双向定位。
+- 静态站点构建时携带自包含 CLI/MCP、安装器和 Skill。用户执行安装命令后才在本机登记 Codex 连接；网站不是远程 MCP 服务。
 - 同一个版本的 CLI/MCP/网页共享模板。文章包记录 `schemaVersion`、`engineVersion`、`templateVersion`；模板版本不兼容时明确拒绝。
 
 独立网页运行不需要 Rust。编译边界仍为现有 pnpm workspace 与 Tauri，未加入第二套包管理器。完整操作与限制见[网页指南](web-guide.md)、[AI 接入](ai-integration.md)。下文描述既有 Mac 1.1.2 架构。

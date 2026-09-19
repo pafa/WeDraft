@@ -8,8 +8,12 @@ Use WeDraft's deterministic renderer; do not recreate its template HTML in a mod
 ## Choose the installed entry point
 
 - Prefer available WeDraft MCP tools for text: call `list_templates`, then `validate_article`, then `export_article` if it is configured. `export_article` writes new files under the configured output directory. Pure `render_article` returns HTML but does not produce a portable bundle.
-- For local files, images, or when no MCP is connected, use the installed CLI. Locate the user's WeDraft checkout or configured executable rather than assuming a machine-specific path or an unpublished npm package. The source build command is `pnpm build:tools` in that checkout.
-- If neither is installed and the location cannot be inferred, ask for the installation location. Do not silently substitute another product.
+- For local files, images, or when MCP tools have not refreshed, use the installed CLI command below. The one-command website installer fills in the exact executable path, so no source checkout or package manager is needed. A source copy of this Skill containing an unresolved command token has not been installed; use the website's `connect.md` setup instructions first.
+- If setup is requested, use the provided WeDraft website's `connect.md`. Do not invent a public address or unpublished npm package. A localhost address requires tools running on that same computer.
+
+## Try the bundled example
+
+When the user asks to verify setup with the built-in example, list templates and read the installed example at `{{WEDRAFT_SAMPLE}}`. Validate and export that exact content. Do not invent an example or modify the user's current draft. The sample can also be rendered immediately with `{{WEDRAFT_CLI}} render --input {{WEDRAFT_SAMPLE}} --out /path/to/new-output`.
 
 ## Preserve the source
 
@@ -18,9 +22,9 @@ Keep wording, ordering, links, captions and source attributions unless the user 
 Pass complete original Markdown. For a local `.wedraft.zip`, pass it directly to the CLI; it includes metadata and images. For Markdown with local relative images, pass `--asset-root` only for the directory containing the user's intended assets. Never scan arbitrary directories or invent missing images, sources or public URLs.
 
 ```sh
-node /absolute/WeDraft/packages/cli/dist/cli.mjs templates
-node /absolute/WeDraft/packages/cli/dist/cli.mjs validate --input /path/to/article.md --asset-root /path/to/assets-root
-node /absolute/WeDraft/packages/cli/dist/cli.mjs render --input /path/to/article.md --asset-root /path/to/assets-root --out /path/to/new-output
+{{WEDRAFT_CLI}} templates
+{{WEDRAFT_CLI}} validate --input /path/to/article.md --asset-root /path/to/assets-root
+{{WEDRAFT_CLI}} render --input /path/to/article.md --asset-root /path/to/assets-root --out /path/to/new-output
 ```
 
 Use a new output directory whose parent exists. Omit `--asset-root` if there are no local images. CLI exit code 2 means content is blocked, not a tool crash. Report the specific issue and line; do not remove unsupported content to make the check pass. Blocked drafts can still be preserved in the article bundle, but are not ready-to-copy output.

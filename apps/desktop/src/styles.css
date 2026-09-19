@@ -1039,6 +1039,51 @@ input[type="checkbox"] {
   bottom: 4px;
 }
 
+/* Fixed logical viewport: scale the complete phone, never reflow its chrome.
+   These opt-in rules are used by the web editor only. */
+.device-viewport { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; }
+.device-scale-controls { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-shrink:0; padding:10px 16px; color:#777970; font-size:12px; }
+.device-scale-controls > div { display:flex; gap:4px; }
+.device-scale-controls button { border:1px solid transparent; border-radius:5px; background:none; color:inherit; padding:5px 8px; cursor:pointer; font-size:12px; }
+.device-scale-controls button[aria-pressed=true] { border-color:#dadcd4; background:#fff; color:#315d49; }
+.device-fit-area { flex:1; min-height:0; min-width:0; overflow:auto; padding:12px; overscroll-behavior:contain; }
+.device-scaled-bounds { position:relative; margin:0 auto; flex-shrink:0; }
+.device-transform { position:absolute; top:0; left:0; transform-origin:top left; }
+.phone-shell.fixed-device { flex:none; max-width:none; margin:0; aspect-ratio:auto; box-sizing:border-box; }
+.phone-shell.fixed-device.iphone { width:456px; height:972px; border:8px solid #191919; border-radius:62px; outline:1px solid #767775; box-shadow:0 16px 40px #1c252322; }
+.phone-shell.fixed-device.android { width:424px; height:904px; border:6px solid #1b1b1b; border-radius:29px; outline:1px solid #73746f; box-shadow:0 16px 40px #1c252322; }
+.fixed-device .phone-status { box-sizing:border-box; display:grid; flex:0 0 62px; height:62px; padding:20px 30px 0; align-items:start; font-size:17px; font-weight:600; }
+.fixed-device .status-time { line-height:22px; padding-left:9px; }
+.fixed-device .dynamic-island { position:absolute; left:50%; top:11px; transform:translateX(-50%); margin:0; width:126px; height:37px; }
+.fixed-device .status-icons { height:22px; grid-column:3; gap:7px; }
+.fixed-device .cellular-icon { width:19px; height:13px; }
+.fixed-device .wifi-icon { width:18px; height:14px; }
+.fixed-device .ios-battery { width:28px; height:14px; }
+.phone-shell.fixed-device.android .phone-status { flex-basis:32px; height:32px; padding:8px 18px 0; font-size:13px; font-weight:500; }
+.fixed-device.android .status-time { padding-left:0; line-height:18px; }
+.fixed-device .camera-hole { position:absolute; width:12px; height:12px; top:10px; left:50%; transform:translateX(-50%); margin:0; }
+.fixed-device .samsung-status-icons { height:18px; margin:0; gap:5px; }
+.fixed-device .samsung-battery { min-width:25px; height:13px; font-size:8px; }
+.fixed-device .wechat-bar { display:grid; flex:0 0 44px; height:44px; padding:0 16px; grid-template-columns:40px 1fr 40px; background:#f7f7f7; border:0; }
+.fixed-device .wechat-bar strong { font-size:17px; font-weight:500; }
+.fixed-device .wechat-back { width:26px; height:36px; }
+.fixed-device .back-chevron { width:11px; height:21px; stroke-width:2; }
+.fixed-device .android-back { width:22px; height:22px; }
+.fixed-device .wechat-actions { width:32px; height:30px; border:0; gap:4px; }
+.fixed-device .wechat-actions i { width:4px; height:4px; }
+.phone-shell.fixed-device.android .wechat-bar { height:48px; flex-basis:48px; }
+.fixed-device.android .wechat-bar strong { justify-self:start; font-weight:500; }
+.fixed-device.android .wechat-actions { flex-direction:column; gap:3px; }
+.fixed-device.android .wechat-actions i { width:3px; height:3px; }
+.fixed-device .wechat-article { padding:24px 20px 32px; scrollbar-width:none; }
+.fixed-device .wechat-article::-webkit-scrollbar { display:none; }
+.fixed-device .wechat-article > h1 { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; font-size:22px; line-height:1.4; font-weight:600; margin:0 0 14px; }
+.fixed-device .wechat-meta { font-size:14px; line-height:1.6; margin-bottom:24px; }
+.device-bottom-safe-area { flex:0 0 34px; background:white; }
+.fixed-device.android .device-bottom-safe-area { flex-basis:24px; }
+.fixed-device .gesture-indicator.iphone { width:154px; height:5px; bottom:8px; }
+.fixed-device .gesture-indicator.android { width:108px; height:4px; bottom:7px; }
+
 .wechat-article {
   flex: 1 1 auto;
   min-height: 0;

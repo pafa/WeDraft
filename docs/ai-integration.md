@@ -1,6 +1,8 @@
-# AI 接入：同一个核心，三个调用入口
+# AI 接入：一条命令，直接使用
 
-当前为源码可运行的 0.1.0 候选。npm 包、公开仓库、远程 MCP 和在线演示站尚未发布。安装和运行无需模型 API Key；AI 如何获得稿件由调用者自己的工具负责。
+网页版的「接入 AI」是独立页面。复制页面提供的安装命令，或把该站点的 `connect.md` 地址交给能在本机执行命令的 AI，即可安装 CLI、Skill 并登记 Codex 的本地 MCP。无需手动下载文件、安装 pnpm 或寻找源码位置。安装和运行无需模型 API Key。
+
+当前为本地候选：公开仓库、远程 MCP 和在线演示站尚未发布。本地预览中的 `127.0.0.1` 地址仅能由这台电脑上的工具访问，不能直接交给云端 AI。公开部署后的相同页面会使用实际站点地址。
 
 - **CLI**：适合能够执行命令的 Agent、批处理和流水线。
 - **MCP**：适合支持本地 stdio 的 AI 客户端，用工具发现和结构化参数调用。
@@ -8,9 +10,29 @@
 
 插件可以在后续作为特定 AI 客户端的安装包装；首版不重复实现排版逻辑。
 
-## 从源码安装
+## 用户接入
 
-使用你有权访问的源码 checkout。Node / pnpm 版本见 `.node-version` 和根 `package.json`，Node 至少 22。
+在「接入 AI」页面复制命令即可，当前命令支持 macOS / Linux，并自动登记 Codex。地址由当前站点生成；以下仅表示格式，不能把占位地址直接运行：
+
+```sh
+curl -fsSL 'https://实际站点/integrations/install.sh' | sh -s -- 'https://实际站点/integrations/'
+```
+
+也可以告诉本机 AI：“读取这个 WeDraft 站点的 `connect.md`，帮我接入，然后为这篇文章排版。”AI 仍须有执行本机命令和修改配置的权限。
+
+安装器完成：
+
+- 获取并校验自包含 CLI / MCP；运行时不依赖源码或 `node_modules`。
+- 优先使用本机 Node 22+。没有时，从 Node 官方站点下载、校验并准备专供 WeDraft 的 Node 24；不使用 sudo、不更改系统 Node。
+- 将工具放入 `~/.local/share/wedraft/`，Skill 放入 `~/.agents/skills/format-with-wedraft/`。
+- 在 `~/.codex/config.toml` 登记 `wedraft` MCP；保留其他配置，修改前备份原文件。
+- 使用 `~/Documents/WeDraft Exports/` 保存新导出文件。已有导出不会覆盖。
+
+重复运行不会重复添加 MCP。遇到同名的其他工具、已有 Skill 或本地改动时会停止并保留它们。安装文件带 SHA-256 完整性校验；站点本身仍须可信。
+
+完成后可以立即使用打印出的 CLI 命令。正在运行的对话如果没有刷新工具列表，可先直接调用 CLI，或重新打开对话加载 MCP / Skill。其他支持 stdio 的客户端可使用安装目录内 `mcp-client.json` 的 `command` / `args`；本次自动配置仅适配 Codex。
+
+## 开发者从源码运行
 
 ```sh
 pnpm install --frozen-lockfile
@@ -18,7 +40,7 @@ pnpm build:tools
 node packages/cli/dist/cli.mjs --help
 ```
 
-CLI 构建产物打包了内部 TypeScript、模板和依赖，可直接由 Node 执行。MCP 构建产物仍依赖本目录安装的官方 `@modelcontextprotocol/sdk`；运行时保留其 `node_modules`。不要把只有 `server.mjs` 的文件当成独立安装包。
+Node / pnpm 版本见 `.node-version` 和根 `package.json`。CLI 和 MCP 构建产物均已打包内部 TypeScript、模板和运行依赖，可直接由 Node 22+ 执行。`pnpm build:web` 同时生成站点的安装资源和 `connect.md`，开发服务器也提供同样入口；没有依赖未发布的 npm 包。
 
 ## CLI
 
@@ -31,7 +53,7 @@ node packages/cli/dist/cli.mjs render --input /path/to/article.md --out /path/to
 node packages/cli/dist/cli.mjs render --input /path/to/article.wedraft.zip --out /path/to/another-result
 ```
 
-可选 `--template next-edition` 或 `--template default-business`，先用 `templates` 查询。Markdown 第一行是标题，复制正文不重复包含标题。
+使用 `--template <模板ID>` 选择模板，先用 `templates` 查询当前完整列表。Markdown 第一行是标题，复制正文不重复包含标题。
 
 相对路径图片只有在显式传入 `--asset-root /path/to/images-root` 时才读取。例如原稿的 `assets/photo.png` 对应该根目录下同名路径；不接受越界路径或指向根目录外的符号链接。不会根据稿件自动扫描硬盘，也不会下载远程图片。
 
@@ -95,7 +117,7 @@ node /absolute/WeDraft/packages/mcp/dist/server.mjs
 
 ## Skill
 
-仓库内的 `skills/format-with-wedraft/` 是可复制的技能目录。按照所用 AI 客户端的技能安装机制加载这个文件夹，再告诉 AI 已安装的 WeDraft 源码位置或连接上述 MCP。此版本不会自动修改用户的全局技能或 MCP 配置。
+网站的一条命令会安装 `format-with-wedraft` 并填入实际 CLI 路径；它可在 MCP 尚未刷新时直接使用工具。仓库内的 Skill 是安装源，命令占位符在安装时替换，不需要用户手动复制目录。
 
 建议任务：
 
@@ -107,4 +129,10 @@ Skill 是流程指导，不能替代可执行工具。它不会用模型重新�
 
 将输出的 `.wedraft.zip` 导入网页即可继续编辑，再导出交还 AI。文章包格式为 `schemaVersion: 1`，包含 `article.md`、`manifest.json` 和图片；未知格式或模板版本会明确拒绝，不静默切换模板。`schemaVersion` 与软件版本独立演进。
 
-实际验证：官方 MCP SDK 1.26.0 客户端连接真实子进程；CLI 生成文件；Chrome 导入、编辑、图片、撤回重做、IndexedDB 恢复、导出重开和富文本复制/浏览器粘贴。此证据不等于已验证所有 AI 宿主或微信后台。运行 `node scripts/smoke-web.mjs` 可复现，需本机 Chrome，证据写入忽略目录 `output/playwright/web-ai/`。
+实际验证：官方 MCP SDK 1.26.0 客户端连接真实子进程；CLI 生成文件；Chrome 导入、编辑、图片、撤回重做、IndexedDB 恢复、导出重开和富文本复制/浏览器粘贴。此证据不等于已验证所有 AI 宿主或微信后台。运行 `node scripts/smoke-web.mjs` 可复现，需本机 Chrome，证据默认写入系统临时目录的 `wedraft-web-evidence/`，可用 `WEDRAFT_EVIDENCE_DIR` 指定。
+
+## 安装验证与限制
+
+安装测试使用明确的临时安装目录、Skill 目录、配置文件和导出目录，不修改开发者真实用户配置。覆盖真实 shell 安装、离开源码目录后的 CLI、MCP 初始化与工具发现、私有 runtime、重复安装、原配置备份、冲突保护和下载完整性校验。测试命令：`pnpm --filter @wedraft/cli test`。
+
+安装器的 `--install-dir`、`--skill-dir`、`--config-file`、`--output-dir` 支持显式路径。`install.sh` 会把这些参数转交给安装器。联网和本机客户端的权限弹窗由运行环境决定；不会承诺绕过权限或让云端工具访问 localhost。当前未覆盖 Windows 自动安装，也未把本地 MCP 描述为可粘贴的远程 MCP URL。
