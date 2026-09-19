@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash, randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
-import { access, chmod, copyFile, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { access, chmod, copyFile, lstat, mkdir, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -40,7 +40,7 @@ async function regularFile(path) {
   try { const stat = await lstat(path); if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Refusing to replace a non-regular file: ${path}`); return stat; }
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
 }
-async function inspectOwnedDirectory(directory) {
+async function inspectOwnedDirectory(directory, checkFiles = true) {
   try {
     const stat = await lstat(directory);
     if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Refusing an existing non-directory or symlink: ${directory}`);
@@ -50,13 +50,57 @@ async function inspectOwnedDirectory(directory) {
   let previous;
   try { previous = JSON.parse(await readFile(join(directory, MARKER), 'utf8')); }
   catch { throw new Error(`Existing files are not owned by this installer: ${directory}`); }
-  if (previous.owner !== OWNER || !previous.files || typeof previous.files !== 'object') throw new Error(`Unrecognized installation: ${directory}`);
+  if (previous.owner !== OWNER || !previous.files || typeof previous.files !== 'object' || Array.isArray(previous.files)) throw new Error(`Unrecognized installation: ${directory}`);
   for (const [name, checksum] of Object.entries(previous.files)) {
-    if (!/^[a-zA-Z0-9_.-]+$/.test(name) || typeof checksum !== 'string') throw new Error('Invalid local installation record.');
+    if (!/^[a-zA-Z0-9_.-]+$/.test(name) || name === MARKER || !/^[a-f0-9]{64}$/.test(checksum)) throw new Error('Invalid local installation record.');
+    if (!checkFiles) continue;
     await regularFile(join(directory, name));
     if (sha256(await readFile(join(directory, name))) !== checksum) throw new Error(`Locally edited WeDraft file preserved: ${join(directory, name)}`);
   }
   return previous;
+}
+function installationPaths(options = {}, previous = null) {
+  const home = homedir();
+  const paths = {
+    installDir: resolve(options.installDir ?? join(home, '.local/share/wedraft')),
+    skillDir: resolve(options.skillDir ?? previous?.paths?.skillDir ?? join(home, '.agents/skills/format-with-wedraft')),
+    configFile: resolve(options.configFile ?? previous?.paths?.configFile ?? join(home, '.codex/config.toml')),
+    outputDir: resolve(options.outputDir ?? previous?.paths?.outputDir ?? join(home, 'Documents/WeDraft Exports')),
+  };
+  if (new Set(Object.values(paths)).size !== 4) throw new Error('Installation, Skill, configuration and output paths must be distinct.');
+  return paths;
+}
+function releaseMetadata(manifest) {
+  if (typeof manifest.version !== 'string' || !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(manifest.version) ||
+    (manifest.sourceCommit != null && !/^[a-f0-9]{40}$/.test(manifest.sourceCommit)) ||
+    (manifest.sourceDirty != null && typeof manifest.sourceDirty !== 'boolean')) throw new Error('Invalid installation version metadata.');
+  return { version: manifest.version, sourceCommit: manifest.sourceCommit ?? null, sourceDirty: manifest.sourceDirty ?? null };
+}
+
+// Restore only the exact files this transaction changed; never delete a directory tree.
+async function replaceFiles(changes) {
+  const before = await Promise.all(changes.map(async ({ path }) => {
+    const stat = await regularFile(path);
+    return stat ? { bytes: await readFile(path), mode: stat.mode & 0o777 } : null;
+  }));
+  let applied = 0;
+  try {
+    for (const change of changes) {
+      if (change.bytes === null) await rm(change.path);
+      else await writeAtomic(change.path, change.bytes, change.mode);
+      applied += 1;
+    }
+  } catch (error) {
+    const failures = [];
+    for (let index = applied - 1; index >= 0; index -= 1) {
+      try {
+        if (before[index]) await writeAtomic(changes[index].path, before[index].bytes, before[index].mode);
+        else await rm(changes[index].path, { force: true });
+      } catch { failures.push(changes[index].path); }
+    }
+    if (failures.length) throw new Error(`Operation failed; could not restore these files: ${failures.join(', ')}. Original error: ${error.message}`);
+    throw error;
+  }
 }
 async function writeAtomic(path, bytes, mode = 0o644) {
   await mkdir(dirname(path), { recursive: true });
@@ -119,24 +163,25 @@ function configureMcp(original, block, previous) {
 }
 
 export async function install(options) {
-  if (Number(process.versions.node.split('.')[0]) < 22) throw new Error('Node 22 or newer is required. Use install.sh to prepare it automatically.');
+  const [major, minor] = process.versions.node.split('.').map(Number);
+  if (major < 22 || (major === 22 && minor < 12)) throw new Error('Node 22.12 or newer is required. Use install.sh to prepare it automatically.');
   const base = baseAddress(options.baseUrl);
-  const home = homedir();
-  const installDir = resolve(options.installDir ?? join(home, '.local/share/wedraft'));
-  const skillDir = resolve(options.skillDir ?? join(home, '.agents/skills/format-with-wedraft'));
-  const configFile = resolve(options.configFile ?? join(home, '.codex/config.toml'));
-  const outputDir = resolve(options.outputDir ?? join(home, 'Documents/WeDraft Exports'));
-  if (new Set([installDir, skillDir, configFile, outputDir]).size !== 4) throw new Error('Installation, Skill, configuration and output paths must be distinct.');
+  const paths = installationPaths(options);
+  const { installDir, skillDir, configFile, outputDir } = paths;
   const lock = `${configFile}.wedraft-lock`;
   await mkdir(dirname(configFile), { recursive: true });
   try { await mkdir(lock, { mode: 0o700 }); }
   catch (error) { if (error.code === 'EEXIST') throw new Error(`Another installation is active, or a stopped installation left its lock: ${lock}`); throw error; }
   try {
   const [previous, previousSkill, configStat] = await Promise.all([inspectOwnedDirectory(installDir), inspectOwnedDirectory(skillDir), regularFile(configFile)]);
+  if (previous?.paths && Object.keys(paths).some(key => previous.paths[key] !== paths[key])) throw new Error('Installation paths changed; use the original paths. Existing installation preserved.');
+  if (previousSkill && (!previous || (previousSkill.paths && previousSkill.paths.installDir !== installDir))) throw new Error('This Skill belongs to another installation; existing files preserved.');
   const originalConfig = configStat ? await readFile(configFile, 'utf8') : '';
   const manifest = JSON.parse(await fetchBytes(new URL('manifest.json', base), 64 * 1024));
-  const names = ['cli.mjs', 'server.mjs', 'SKILL.md', 'sample.md', 'THIRD-PARTY-NOTICES.txt', 'LICENSE'];
+  const names = ['cli.mjs', 'server.mjs', 'SKILL.md', 'sample.md', 'THIRD-PARTY-NOTICES.txt', 'LICENSE', 'installer.mjs'];
   if (manifest.schemaVersion !== 1 || manifest.product !== 'wedraft' || !manifest.files) throw new Error('Unsupported WeDraft installation manifest.');
+  if (manifest.managementVersion !== 1) throw new Error('This download source does not provide compatible installation management yet; existing installation preserved.');
+  const release = releaseMetadata(manifest);
   const payload = Object.fromEntries(await Promise.all(names.map(async name => {
     const record = manifest.files[name];
     if (!record || !/^[a-f0-9]{64}$/.test(record.sha256) || !Number.isInteger(record.size) || record.size < 1 || record.size > 20 * 1024 * 1024) throw new Error(`Invalid manifest entry: ${name}`);
@@ -144,7 +189,7 @@ export async function install(options) {
     if (bytes.length !== record.size || sha256(bytes) !== record.sha256) throw new Error(`Integrity check failed: ${name}`);
     return [name, bytes];
   })));
-  const nodePath = options.copyRuntime ? join(installDir, 'node') : process.execPath;
+  const nodePath = options.copyRuntime || previous?.files.node ? join(installDir, 'node') : process.execPath;
   const cliPath = join(installDir, 'cli.mjs'); const mcpPath = join(installDir, 'server.mjs');
   const command = `${shellQuote(nodePath)} ${shellQuote(cliPath)}`;
   const mcp = { command: nodePath, args: [mcpPath, '--output-dir', outputDir] };
@@ -154,6 +199,8 @@ export async function install(options) {
   const toolFiles = { 'cli.mjs': payload['cli.mjs'], 'server.mjs': payload['server.mjs'], 'sample.md': payload['sample.md'], 'mcp-client.json': Buffer.from(JSON.stringify({ mcpServers: { wedraft: mcp } }, null, 2) + '\n') };
   toolFiles['THIRD-PARTY-NOTICES.txt'] = payload['THIRD-PARTY-NOTICES.txt'];
   toolFiles.LICENSE = payload.LICENSE;
+  toolFiles['installer.mjs'] = payload['installer.mjs'];
+  toolFiles['manage.sh'] = Buffer.from(`#!/bin/sh\nexec ${shellQuote(nodePath)} ${shellQuote(join(installDir, 'installer.mjs'))} "$@" --install-dir ${shellQuote(installDir)}\n`);
   if (options.copyRuntime) {
     if (!options.runtimeLicense || !(await regularFile(options.runtimeLicense))) throw new Error('Copying the private Node runtime requires its official LICENSE file (--runtime-license).');
     const license = await readFile(options.runtimeLicense);
@@ -182,28 +229,135 @@ export async function install(options) {
     if (outputStat && (!outputStat.isDirectory() || outputStat.isSymbolicLink())) throw new Error(`Output must be a directory: ${outputDir}`);
     // Recheck the shared configuration just before writing to avoid replacing concurrent edits.
     if ((await exists(configFile) ? await readFile(configFile, 'utf8') : '') !== originalConfig) throw new Error('Codex configuration changed during installation; please retry.');
+    // Downloads can take time. Do not overwrite edits made while they were in flight.
+    for (const [directory, files] of [[installDir, toolFiles], [skillDir, skillFiles]]) {
+      const owned = await inspectOwnedDirectory(directory);
+      for (const name of Object.keys(files)) if (await exists(join(directory, name)) && !owned?.files[name]) throw new Error(`Unmanaged existing file preserved: ${join(directory, name)}`);
+    }
+    const changes = [];
     for (const [directory, files] of [[installDir, toolFiles], [skillDir, skillFiles]]) {
       await mkdir(directory, { recursive: true });
-      for (const [name, bytes] of Object.entries(files)) await writeAtomic(join(directory, name), bytes, name === 'node' ? 0o755 : 0o644);
-      const record = { owner: OWNER, source: base.href, files: Object.fromEntries(Object.entries(files).map(([name, bytes]) => [name, sha256(bytes)])), ...(directory === installDir ? { configBlock: block } : {}) };
-      await writeAtomic(join(directory, MARKER), JSON.stringify(record, null, 2) + '\n');
+      for (const [name, bytes] of Object.entries(files)) changes.push({ path: join(directory, name), bytes, mode: name === 'node' || name === 'manage.sh' ? 0o755 : 0o644 });
+      const record = { owner: OWNER, source: base.href, release, paths, files: Object.fromEntries(Object.entries(files).map(([name, bytes]) => [name, sha256(bytes)])), ...(directory === installDir ? { configBlock: block } : {}) };
+      changes.push({ path: join(directory, MARKER), bytes: JSON.stringify(record, null, 2) + '\n' });
     }
     await mkdir(outputDir, { recursive: true });
     let backup = null;
     if (newConfig !== originalConfig) {
       if (configStat) { backup = `${configFile}.wedraft-backup-${Date.now()}-${randomUUID().slice(0, 8)}`; await copyFile(configFile, backup); await chmod(backup, configStat.mode & 0o777); }
-      await writeAtomic(configFile, newConfig, configStat ? configStat.mode & 0o777 : 0o600);
+      changes.push({ path: configFile, bytes: newConfig, mode: configStat ? configStat.mode & 0o777 : 0o600 });
     }
-    return { installed: true, cliCommand: command, mcp, installDir, skillDir, configFile, outputDir, configBackup: backup };
+    await replaceFiles(changes);
+    return { installed: true, release, cliCommand: command, manageCommand: `sh ${shellQuote(join(installDir, 'manage.sh'))}`, mcp, ...paths, configBackup: backup };
   } finally { await rm(stage, { recursive: true, force: true }); }
+  } finally { await rm(lock, { recursive: true, force: true }); }
+}
+
+async function installedRecord(options) {
+  const installDir = installationPaths(options).installDir;
+  const record = await inspectOwnedDirectory(installDir, false);
+  return { installDir, record };
+}
+function managedPaths(options, record, installDir) {
+  if (!record.paths || record.paths.installDir !== installDir ||
+    !['installDir', 'skillDir', 'configFile', 'outputDir'].every(key => typeof record.paths[key] === 'string' && resolve(record.paths[key]) === record.paths[key])) {
+    throw new Error('Legacy installation has no recorded paths. Rerun the original install command with its original paths before upgrading or uninstalling.');
+  }
+  const paths = installationPaths({ ...record.paths, ...options, installDir });
+  if (Object.keys(paths).some(key => paths[key] !== record.paths[key])) throw new Error('Management paths differ from the installation record; existing files preserved.');
+  return paths;
+}
+function removeMcp(original, previous) {
+  if (!original.includes(START) && !original.includes(END)) {
+    if (hasExistingMcpConfiguration(original)) throw new Error('WeDraft MCP configuration was edited; preserved.');
+    return original;
+  }
+  const result = configureMcp(original, '', previous);
+  const suffix = original.slice(original.indexOf(END) + END.length);
+  const next = suffix.split(/\r?\n/).find(line => line.trim() && !line.trimStart().startsWith('#'));
+  // Otherwise removing the managed table would silently re-parent added TOML keys.
+  if (next && !next.trimStart().startsWith('[')) throw new Error('Settings were added after the managed WeDraft block; existing configuration preserved.');
+  return result;
+}
+
+export async function status(options = {}) {
+  const { installDir, record } = await installedRecord(options);
+  if (!record) return { installed: false, installDir };
+  const result = { installed: true, installDir, source: record.source, release: record.release ?? null, legacy: !record.paths, issues: [] };
+  if (!record.paths) return result;
+  const paths = managedPaths(options, record, installDir);
+  result.paths = paths;
+  for (const directory of [paths.installDir, paths.skillDir]) {
+    try {
+      const owned = await inspectOwnedDirectory(directory);
+      if (!owned || owned.paths?.installDir !== installDir) result.issues.push(`Missing or unrelated installation record: ${directory}`);
+    } catch (error) { result.issues.push(error.message); }
+  }
+  try {
+    const stat = await regularFile(paths.configFile);
+    const config = stat ? await readFile(paths.configFile, 'utf8') : '';
+    if (!config.includes(START)) result.issues.push('Managed Codex MCP configuration is missing.');
+    else removeMcp(config, record);
+  } catch (error) { result.issues.push(error.message); }
+  return result;
+}
+
+export async function upgrade(options = {}) {
+  const { installDir, record } = await installedRecord(options);
+  if (!record) throw new Error('WeDraft is not installed. Run the installation command first.');
+  const paths = managedPaths(options, record, installDir);
+  return install({ ...paths, baseUrl: options.baseUrl ?? record.source });
+}
+
+export async function uninstall(options = {}) {
+  const { installDir, record } = await installedRecord(options);
+  if (!record) return { uninstalled: false, installDir, reason: 'not-installed' };
+  const paths = managedPaths(options, record, installDir);
+  const lock = `${paths.configFile}.wedraft-lock`;
+  await mkdir(dirname(paths.configFile), { recursive: true });
+  try { await mkdir(lock, { mode: 0o700 }); }
+  catch (error) { if (error.code === 'EEXIST') throw new Error(`Another installation is active, or a stopped installation left its lock: ${lock}`); throw error; }
+  try {
+    const tools = await inspectOwnedDirectory(paths.installDir);
+    const skill = await inspectOwnedDirectory(paths.skillDir);
+    if (!tools || !skill || tools.paths?.installDir !== installDir || skill.paths?.installDir !== installDir) throw new Error('Missing or unrelated ownership records; no files were removed.');
+    const configStat = await regularFile(paths.configFile);
+    const originalConfig = configStat ? await readFile(paths.configFile, 'utf8') : '';
+    const newConfig = removeMcp(originalConfig, tools);
+    const changes = [];
+    let backup = null;
+    if (newConfig !== originalConfig) {
+      backup = `${paths.configFile}.wedraft-backup-${Date.now()}-${randomUUID().slice(0, 8)}`;
+      await copyFile(paths.configFile, backup); await chmod(backup, configStat.mode & 0o777);
+      changes.push({ path: paths.configFile, bytes: newConfig, mode: configStat.mode & 0o777 });
+    }
+    for (const [directory, owned] of [[paths.skillDir, skill], [paths.installDir, tools]]) {
+      for (const name of [...Object.keys(owned.files), MARKER]) changes.push({ path: join(directory, name), bytes: null });
+    }
+    if ((await exists(paths.configFile) ? await readFile(paths.configFile, 'utf8') : '') !== originalConfig) throw new Error('Codex configuration changed; no files were removed.');
+    await replaceFiles(changes);
+    const retainedDirectories = [];
+    for (const directory of [paths.skillDir, paths.installDir]) {
+      try { await rmdir(directory); }
+      catch (error) { if (error.code === 'ENOTEMPTY' || error.code === 'EEXIST') retainedDirectories.push(directory); else throw error; }
+    }
+    return { uninstalled: true, outputDir: paths.outputDir, exportsPreserved: true, retainedDirectories, configBackup: backup };
   } finally { await rm(lock, { recursive: true, force: true }); }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
-    const { values } = parseArgs({ strict: true, options: Object.fromEntries(['base-url', 'install-dir', 'skill-dir', 'config-file', 'output-dir', 'runtime-license'].map(name => [name, { type: 'string' }]).concat([['copy-runtime', { type: 'boolean' }]])) });
-    if (!values['base-url']) throw new Error('--base-url is required.');
-    const result = await install({ baseUrl: values['base-url'], installDir: values['install-dir'], skillDir: values['skill-dir'], configFile: values['config-file'], outputDir: values['output-dir'], copyRuntime: values['copy-runtime'], runtimeLicense: values['runtime-license'] });
-    process.stdout.write(`\nWeDraft is ready. Skill installed and Codex MCP configured.\nUse immediately: ${result.cliCommand} templates\nMCP command/args: ${join(result.installDir, 'mcp-client.json')}\nArticle exports: ${result.outputDir}\n${result.configBackup ? `Previous configuration backed up: ${result.configBackup}\n` : ''}If this conversation has not refreshed its tools, use the CLI now or reload the conversation.\n`);
+    const { values, positionals } = parseArgs({ allowPositionals: true, strict: true, options: Object.fromEntries(['base-url', 'install-dir', 'skill-dir', 'config-file', 'output-dir', 'runtime-license'].map(name => [name, { type: 'string' }]).concat([['copy-runtime', { type: 'boolean' }], ['help', { type: 'boolean' }]])) });
+    const action = positionals[0] ?? 'install';
+    if (values.help) {
+      process.stdout.write('WeDraft installation management\ninstall --base-url URL [--install-dir PATH --skill-dir PATH --config-file PATH --output-dir PATH]\nstatus | upgrade | uninstall [--install-dir PATH]\nstatus is offline/read-only. Upgrade uses the recorded source; --base-url explicitly changes it.\nUninstall preserves article exports and unrelated or locally modified files; conflicts stop the operation.\n');
+    } else {
+      if (positionals.length > 1 || !['install', 'status', 'upgrade', 'uninstall'].includes(action)) throw new Error('Expected install, status, upgrade or uninstall.');
+      if (action === 'install' && !values['base-url']) throw new Error('--base-url is required.');
+      const options = Object.fromEntries(Object.entries({ baseUrl: values['base-url'], installDir: values['install-dir'], skillDir: values['skill-dir'], configFile: values['config-file'], outputDir: values['output-dir'], copyRuntime: values['copy-runtime'], runtimeLicense: values['runtime-license'] }).filter(([, value]) => value !== undefined));
+      const result = await ({ install, status, upgrade, uninstall }[action])(options);
+      if (action === 'status' || action === 'uninstall') process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+      else process.stdout.write(`\nWeDraft is ready. Skill installed and Codex MCP configured.\nVersion: ${result.release.version}; source commit: ${result.release.sourceCommit ?? 'unknown'}${result.release.sourceDirty ? ' (working tree modified)' : ''}\nUse immediately: ${result.cliCommand} templates\nManage (choose one action):\n  ${result.manageCommand} status\n  ${result.manageCommand} upgrade\n  ${result.manageCommand} uninstall\nMCP command/args: ${join(result.installDir, 'mcp-client.json')}\nArticle exports: ${result.outputDir}\n${result.configBackup ? `Previous configuration backed up: ${result.configBackup}\n` : ''}If this conversation has not refreshed its tools, use the CLI now or reload the conversation.\n`);
+    }
   } catch (error) { process.stderr.write(`WeDraft setup stopped: ${error.message}\n`); process.exitCode = 1; }
 }

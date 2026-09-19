@@ -42,7 +42,7 @@ curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'http
 安装器完成：
 
 - 获取并校验自包含 CLI / MCP；运行时不依赖源码或 `node_modules`。
-- 优先使用本机 Node 22+。没有时，从 Node 官方站点下载、校验并准备专供 WeDraft 的 Node 24；不使用 sudo、不更改系统 Node。
+- 优先使用本机 Node 22.12+。没有时，从 Node 官方站点下载、校验并准备专供 WeDraft 的 Node 24；不使用 sudo、不更改系统 Node。
 - 将工具放入 `~/.local/share/wedraft/`，Skill 放入 `~/.agents/skills/format-with-wedraft/`。
 - 在 `~/.codex/config.toml` 登记 `wedraft` MCP；保留其他配置，修改前备份原文件。
 - 使用 `~/Documents/WeDraft Exports/` 保存新导出文件。已有导出不会覆盖。
@@ -50,6 +50,28 @@ curl -fsSL 'https://wedraft.xiaoha.org/integrations/install.sh' | sh -s -- 'http
 重复运行不会重复添加 MCP。遇到同名的其他工具、已有 Skill 或本地改动时会停止并保留它们。安装文件带 SHA-256 完整性校验；站点本身仍须可信。
 
 完成后可以立即使用打印出的 CLI 命令。正在运行的对话如果没有刷新工具列表，可先直接调用 CLI，或重新打开对话加载 MCP / Skill。其他支持 stdio 的客户端可使用安装目录内 `mcp-client.json` 的 `command` / `args`；本次自动配置仅适配 Codex。
+
+## 查看版本、升级与卸载
+
+安装完成后会打印 `Manage` 命令。默认目录下可以直接运行：
+
+```sh
+sh "$HOME/.local/share/wedraft/manage.sh" status
+sh "$HOME/.local/share/wedraft/manage.sh" upgrade
+sh "$HOME/.local/share/wedraft/manage.sh" uninstall
+```
+
+三个命令分别执行检查、升级、卸载，不要一次全部执行。自定义安装目录时，使用安装器打印出的路径。管理入口会使用原来记录的 Skill、Codex 配置和导出目录，无需再次填写；它不会根据当前工作目录猜测这些位置。
+
+`status` **离线、只读**，输出 JSON：`release.version` 是工具版本，`release.sourceCommit` 是构建源码提交，`release.sourceDirty` 表示构建时源码是否有未提交修改。当前版本仍为 `0.1.0`；同版本的不同提交可以据此区分。源代码压缩包缺少 Git 信息时提交显示为 `null`，不会伪造版本来源。`issues` 会列出已修改、缺失的安装文件或 MCP 配置；有提示时先处理提示，不要直接删除记录来绕过保护。安装元数据保存在工具和 Skill 目录的 `.wedraft-install.json` 中。
+
+`upgrade` 从**安装时记录的网站地址**重新获取当前安装资源，验证 SHA-256、试运行 CLI/MCP，然后更新工具、Skill 和版本记录；正常情况下其他 MCP 配置与导出文件不变。也可以重新运行原安装命令，保留原来的自定义路径。它不会自行查找或升级到未发布的 npm 包，也不按 `0.1.0` 字符串判断是否已有新提交。如果需要明确更换可信下载来源，可使用 `upgrade --base-url 'https://另一个可信站点/integrations/'`。曾从临时 `localhost` 安装时，原服务必须可访问，或由你明确指定正式来源。
+
+升级前建议结束正在排版的任务；升级后重新打开 AI 对话，使宿主重新启动 MCP 并加载 Skill。CLI 可以立即使用。工具、Skill 或自管 MCP 段被手工修改时，操作会停止并保留现有内容。先把自己的改动保存在安装目录外，再决定恢复原版后升级，或继续使用现有版本；没有自动覆盖本地修改的 `--force` 选项。
+
+`uninstall` 会先核对所有权和文件哈希，再移除 WeDraft 管理的文件及 Codex 中带标记的 WeDraft MCP 段。配置改动前会生成 `.wedraft-backup-*` 备份。**导出文章、其他 MCP、配置备份、用户额外添加的文件均保留**；目录中还有额外文件时保留目录。安装文件或管理段被修改时停止整个卸载；不会删掉整棵目录。不要把恢复整个旧配置备份当成日常卸载方式，那可能覆盖后来添加的其他 MCP。已经运行的 MCP 进程由宿主管理，卸载不会强制结束进程，完成后请重新打开宿主对话。
+
+旧版安装没有 `manage.sh`、版本或路径记录时，先重跑原安装命令并沿用原有自定义路径，安装器在确认文件未被修改后补齐管理记录。缺少旧路径时先从原 Skill 的 CLI 命令和 Codex `wedraft` 配置确认，不要直接猜测。新管理器遇到不支持管理协议的旧下载来源会停止，保留现有安装。
 
 ## 工具分别负责什么
 
@@ -67,7 +89,7 @@ pnpm build:tools
 node packages/cli/dist/cli.mjs --help
 ```
 
-Node / pnpm 版本见 `.node-version` 和根 `package.json`。CLI 和 MCP 构建产物均已打包内部 TypeScript、模板和运行依赖，可直接由 Node 22+ 执行。`pnpm build:web` 同时生成站点的安装资源和 `connect.md`，开发服务器也提供同样入口；没有依赖未发布的 npm 包。
+Node / pnpm 版本见 `.node-version` 和根 `package.json`。CLI 和 MCP 构建产物均已打包内部 TypeScript、模板和运行依赖，可直接由 Node 22.12+ 执行。`pnpm build:web` 同时生成站点的安装资源和 `connect.md`，开发服务器也提供同样入口；没有依赖未发布的 npm 包。
 
 ## CLI
 
@@ -162,6 +184,6 @@ Skill 是流程指导，不能替代可执行工具。它不会用模型重新�
 
 ## 安装验证与限制
 
-安装测试使用明确的临时安装目录、Skill 目录、配置文件和导出目录，不修改开发者真实用户配置。覆盖真实 shell 安装、离开源码目录后的 CLI、MCP 初始化与工具发现、私有 runtime、重复安装、原配置备份、冲突保护和下载完整性校验。测试命令：`pnpm --filter @wedraft/cli test`。
+安装测试使用明确的临时安装目录、Skill 目录、配置文件和导出目录，不修改开发者真实用户配置。覆盖真实 shell 安装、离开源码目录后的 CLI、MCP 初始化与工具发现、私有 runtime、重复安装、原配置备份、冲突保护、下载完整性校验，以及离线版本检查、升级、卸载和额外文件/导出保护。测试命令：`pnpm --filter @wedraft/cli test`。
 
 安装器的 `--install-dir`、`--skill-dir`、`--config-file`、`--output-dir` 支持显式路径。`install.sh` 会把这些参数转交给安装器。联网和本机客户端的权限弹窗由运行环境决定；不会承诺绕过权限或让云端工具访问 localhost。当前未覆盖 Windows 自动安装，也未把本地 MCP 描述为可粘贴的远程 MCP URL。
