@@ -10,6 +10,10 @@ export async function checkDeployment(directory, origin, fetcher = fetch, timeou
   if (base.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) throw new Error('Public deployment checks require HTTPS.');
   const inventory = JSON.parse(await readFile(join(directory, 'site-files.json'), 'utf8'));
   const candidate = JSON.parse(await readFile(join(directory, 'site/release.json'), 'utf8'));
+  const redirects = await readFile(join(directory, 'deploy-site/_redirects'), 'utf8').catch(error => {
+    if (error.code === 'ENOENT') return ''; // Retained releases may predate this compatibility route.
+    throw error;
+  });
   const rows = [];
   async function request(path, file, status = 200) {
     const response = await fetcher(new URL(path, base), { signal: AbortSignal.timeout(timeoutMs), headers: { Accept: path === '/' || path.endsWith('.html') ? 'text/html' : '*/*' } });
@@ -20,9 +24,9 @@ export async function checkDeployment(directory, origin, fetcher = fetch, timeou
     const type = response.headers.get('content-type') || '';
     const cache = response.headers.get('cache-control') || '';
     if (status === 200) {
-      const expectedType = path === '/' || path.endsWith('.html') ? /text\/html/ : path.endsWith('.json') ? /application\/json/ : path.endsWith('.mjs') ? /(?:application|text)\/javascript/ : /\.(md|sh|txt)$/.test(path) ? /text\/plain/ : null;
+      const expectedType = path === '/' || path.endsWith('.html') ? /text\/html/ : path.endsWith('.json') ? /application\/json/ : path.endsWith('.mjs') ? /(?:application|text)\/javascript/ : path.endsWith('.xml') ? /application\/xml/ : path === '/favicon.ico' || path.endsWith('.png') ? /image\/png/ : /\.(md|sh|txt)$/.test(path) ? /text\/plain/ : null;
       if (expectedType && !expectedType.test(type)) throw new Error(`Unexpected MIME type: ${path} (${type})`);
-      if (path === '/' || path === '/index.html' || path === '/release.json' || path === '/connect.md' || path.startsWith('/integrations/') || path.startsWith('/assets/')) {
+      if (path === '/' || path === '/index.html' || path === '/release.json' || path === '/connect.md' || path === '/robots.txt' || path === '/sitemap.xml' || path.startsWith('/integrations/') || path.startsWith('/assets/')) {
         if (!cache.includes('no-transform') || !cache.includes(path.startsWith('/assets/') ? 'immutable' : 'no-cache')) throw new Error(`Unexpected cache policy: ${path} (${cache})`);
       }
     }
@@ -35,6 +39,11 @@ export async function checkDeployment(directory, origin, fetcher = fetch, timeou
   const index = inventory.find(file => file.path === 'site/index.html');
   if (!index || !inventory.some(file => file.path === 'site/release.json')) throw new Error('Missing entry or release metadata in inventory.');
   await request('/', index);
+  if (redirects.split(/\r?\n/).some(line => /^\/favicon\.ico\s+\/app-icon\.png\s+301$/.test(line.trim()))) {
+    const icon = inventory.find(file => file.path === 'site/app-icon.png');
+    if (!icon) throw new Error('Missing favicon target in inventory.');
+    await request('/favicon.ico', icon);
+  }
   await request('/integrations/wedraft-check-missing.mjs', null, 404);
   await request('/wedraft-check-missing.md', null, 404);
   return { source: candidate.commit, version: candidate.version, site: base.origin, checkedAt: new Date().toISOString(), rows };

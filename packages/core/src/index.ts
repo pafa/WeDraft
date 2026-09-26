@@ -13,7 +13,7 @@ import { PREVIEW_COPY_SCRIPT, PREVIEW_COPY_CSP_HASH } from "./preview-copy.js";
 export * from "./assets.js";
 export * from "./bundle.js";
 
-export const ENGINE_VERSION = "0.1.1";
+export const ENGINE_VERSION = "0.1.2";
 export const TEMPLATE_VERSION = "builtin-1";
 export const DEFAULT_TEMPLATE_ID = "next-edition";
 
