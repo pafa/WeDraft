@@ -10,6 +10,12 @@
 /connect.md
   Cache-Control: public, no-cache, no-transform
   Content-Type: text/plain; charset=utf-8
+/robots.txt
+  Cache-Control: public, no-cache, no-transform
+  Content-Type: text/plain; charset=utf-8
+/sitemap.xml
+  Cache-Control: public, no-cache, no-transform
+  Content-Type: application/xml; charset=utf-8
 /integrations/*
   Cache-Control: public, no-cache, no-transform
 /assets/*

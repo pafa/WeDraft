@@ -1,12 +1,12 @@
 # 网页与 AI 部署
 
-公开测试版网站为 **https://wedraft.xiaoha.org**，现有 **https://github.com/pafa/WeDraft** 已采用 [MIT](../LICENSE) 开源。工具集版本 `0.1.0`；线上当前源码以 [release.json](https://wedraft.xiaoha.org/release.json) 的完整 `commit` 为准，不能由本地分支或工具版本号推断。首次部署历史见[首发记录](releases/web-0.1.0.md)。真实微信环境尚未验收。
+公开测试版网站为 **https://wedraft.xiaoha.org**，现有 **https://github.com/pafa/WeDraft** 已采用 [MIT](../LICENSE) 开源。当前源码准备工具集 `0.1.2`；线上当前版本与源码以 [release.json](https://wedraft.xiaoha.org/release.json) 的 `version` 和完整 `commit` 为准，不能由本地分支或工具版本号推断。首次部署历史见[首发记录](releases/web-0.1.0.md)。真实微信环境尚未验收。
 
 首发范围是网页、七款内置模板、CLI、本地 MCP 与 Skill。Mac 仍保留 1.1.2 基线，不包含本次重新打包、签名或公证。
 
 ## 版本一致性
 
-`apps/web`、`packages/cli`、`packages/mcp`、`packages/core` 的 package 版本和 `ENGINE_VERSION` 共同标识 Web/AI 工具集，由仓库检查同时校验工作区与暂存候选。Mac 和其他内部包保持独立版本。本次整理不升版本；下一次 Web/AI 补丁发布准备时一起递增上述五处，并更新 CHANGELOG，再从批准的 main 构建候选。
+`apps/web`、`packages/cli`、`packages/mcp`、`packages/core` 的 package 版本和 `ENGINE_VERSION` 共同标识 Web/AI 工具集，由仓库检查同时校验工作区与暂存候选。Mac 和其他内部包保持独立版本。Web/AI 补丁发布准备时一起递增上述五处，并更新 CHANGELOG，再从批准的 main 构建候选。
 
 ## 本地发布候选
 
@@ -23,7 +23,7 @@ node scripts/prepare-web-release.mjs
 | --- | --- |
 | `site/`、`site.tar.gz` | 静态站点与一键安装资源，来自同一源码提交。 |
 | `deploy-site/`、`wrangler.jsonc`、`deploy.tar.gz` | 可直接审阅的 Cloudflare 静态部署产物、配置及归档；不含账号或凭据。 |
-| `deploy-files.json` | 部署文件与配置的 SHA-256，包含 `_headers`。 |
+| `deploy-files.json` | 部署文件与配置的 SHA-256，包含 `_headers` 和 `_redirects`。 |
 | `source.tar.gz` | 该提交的已跟踪源码快照，不包含 `.git` 历史、工作区私稿或忽略文件。不是另一套公开仓库。 |
 | `candidate.json`、`site/release.json` | 版本、完整源 SHA、目标域名、构建时间及审阅状态。 |
 | `site-files.json`、`source-files.json` | 产物哈希与源码文件清单，供逐项审阅。 |
@@ -33,7 +33,7 @@ node scripts/prepare-web-release.mjs
 
 ## Cloudflare 配置与部署
 
-源码中的 [`deployment/cloudflare/wrangler.template.json`](../deployment/cloudflare/wrangler.template.json) 和 [`_headers`](../deployment/cloudflare/_headers) 是托管配置来源。候选脚本根据 `deployment/web.json` 的站点生成自定义域名路由；Fork 项目部署前先修改自己的站点地址和模板中的 Worker 名称。账号通过 `CLOUDFLARE_ACCOUNT_ID` 提供，认证通过 Wrangler 登录或本机环境变量提供，均不写进源码或候选。
+源码中的 [`deployment/cloudflare/wrangler.template.json`](../deployment/cloudflare/wrangler.template.json)、[`_headers`](../deployment/cloudflare/_headers) 和 [`_redirects`](../deployment/cloudflare/_redirects) 是托管配置来源。候选脚本根据 `deployment/web.json` 的站点生成自定义域名路由；Fork 项目部署前先修改自己的站点地址、模板中的 Worker 名称、`apps/web/index.html` 中的正式网址，以及 `apps/web/public/robots.txt` 和 `sitemap.xml` 中的域名。账号通过 `CLOUDFLARE_ACCOUNT_ID` 提供，认证通过 Wrangler 登录或本机环境变量提供，均不写进源码或候选。
 
 使用 Wrangler 4（本流程验证版本 `4.127.1`）。以下命令在**候选目录**运行，先核对配置、域名和全部校验和：
 
@@ -52,9 +52,11 @@ pnpm dlx wrangler@4.127.1 deploy --config wrangler.jsonc
 
 ## 站点部署要求
 
-由 Cloudflare Workers Static Assets 在域名根目录提供构建产物（`deploy-site/`，在原始 `site/` 上仅增加托管响应头 `_headers`），无应用后台，用户无需注册账号，也不需要数据库或模型 API Key。每次发布的 Cloudflare Version ID 与源 SHA 单独记录在本地候选目录，避免文档中的旧 ID 被误认为当前线上版本。发布验收需核对正式域名 TLS、资源与完整源 SHA，不能把本机 HTTP 成功当作 HTTPS 验收。
+由 Cloudflare Workers Static Assets 在域名根目录提供构建产物（`deploy-site/`，在原始 `site/` 上增加托管响应头 `_headers` 和跳转规则 `_redirects`），无应用后台，用户无需注册账号，也不需要数据库或模型 API Key。每次发布的 Cloudflare Version ID 与源 SHA 单独记录在本地候选目录，避免文档中的旧 ID 被误认为当前线上版本。发布验收需核对正式域名 TLS、资源与完整源 SHA，不能把本机 HTTP 成功当作 HTTPS 验收。
 
 - `/`、`/#/templates`、`/#/ai` 使用同一入口。hash 路由不需要服务端路由重写。
+- `/favicon.ico` 以 301 跳转到现有 `/app-icon.png`，最终返回相同 PNG 图标；此兼容规则由 Cloudflare 托管，Vite 开发服务器不处理 `_redirects`。
+- `/sitemap.xml` 仅列出正式首页 `https://wedraft.xiaoha.org/`，不列 hash 路由或用户文章。`/robots.txt` 允许抓取并声明 sitemap 地址；两者使用 `no-cache, no-transform`，分别提供 XML 和纯文本 MIME。提供 sitemap 不等于搜索引擎已经收录。
 - `/connect.md` 与 `/integrations/*` 必须返回真实文件；不存在的安装资源返回 404，不能兜底成 HTML。
 - `index.html`、`connect.md`、`release.json` 与安装目录采用 `Cache-Control: no-cache`；带内容哈希的 `/assets/*` 可长缓存。一次更新原子替换整套产物，避免混用安装器与旧 manifest。
 - `.mjs` 提供 JavaScript MIME，`.json` 为 JSON，`.md` / `.sh` / `.txt` 为纯文本。保留站点与安装目录中的第三方许可原文。

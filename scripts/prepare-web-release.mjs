@@ -23,7 +23,7 @@ try {
   execFileSync('pnpm', ['build:web'], { cwd: root, stdio: 'inherit' });
   if (git('rev-parse', 'HEAD') !== commit || git('status', '--porcelain')) throw new Error('Source changed during preparation; discard this incomplete candidate.');
   await cp(join(root, 'apps/web/dist'), join(directory, 'site'), { recursive: true, errorOnExist: true });
-  const required = ['index.html', 'connect.md', 'LICENSE', 'THIRD-PARTY-NOTICES.txt', 'dependencies.json', 'integrations/install.sh', 'integrations/installer.mjs', 'integrations/installer.sha256', 'integrations/manifest.json', 'integrations/cli.mjs', 'integrations/server.mjs', 'integrations/SKILL.md', 'integrations/THIRD-PARTY-NOTICES.txt', 'integrations/LICENSE'];
+  const required = ['index.html', 'app-icon.png', 'robots.txt', 'sitemap.xml', 'connect.md', 'LICENSE', 'THIRD-PARTY-NOTICES.txt', 'dependencies.json', 'integrations/install.sh', 'integrations/installer.mjs', 'integrations/installer.sha256', 'integrations/manifest.json', 'integrations/cli.mjs', 'integrations/server.mjs', 'integrations/SKILL.md', 'integrations/THIRD-PARTY-NOTICES.txt', 'integrations/LICENSE'];
   for (const name of required) if (!(await lstat(join(directory, 'site', name))).isFile()) throw new Error(`Missing release file: ${name}`);
   const manifest = JSON.parse(await readFile(join(directory, 'site/integrations/manifest.json'), 'utf8'));
   if (manifest.version !== version) throw new Error('Installer and website versions differ.');

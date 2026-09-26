@@ -21,7 +21,7 @@
 
 WeDraft 是面向微信公众号文章的 Markdown 排版工具。标题、段落、引用、列表、代码、表格、图片和来源说明，由统一模板处理；完成后复制富文本正文，粘贴到公众号后台。
 
-网页版、CLI、MCP 和 Skill 共用排版核心，让手工编辑与 AI 工作流使用同一套效果。线上为 **0.1.0 公开测试版**，当前源码准备 **0.1.1**；实际部署以 [release.json](https://wedraft.xiaoha.org/release.json) 为准。
+网页版、CLI、MCP 和 Skill 共用排版核心，让手工编辑与 AI 工作流使用同一套效果。已提供公开测试版，当前源码准备 **0.1.2**；实际部署以 [release.json](https://wedraft.xiaoha.org/release.json) 为准。
 
 ## 核心功能
 

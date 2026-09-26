@@ -11,5 +11,6 @@ export async function prepareHosting(directory, site) {
   template.routes = [{ pattern: url.hostname, custom_domain: true }];
   await cp(join(directory, 'site'), join(directory, 'deploy-site'), { recursive: true, errorOnExist: true, force: false });
   await cp(new URL('../deployment/cloudflare/_headers', import.meta.url), join(directory, 'deploy-site/_headers'), { errorOnExist: true, force: false });
+  await cp(new URL('../deployment/cloudflare/_redirects', import.meta.url), join(directory, 'deploy-site/_redirects'), { errorOnExist: true, force: false });
   await writeFile(join(directory, 'wrangler.jsonc'), JSON.stringify(template, null, 2) + '\n', { flag: 'wx' });
 }
