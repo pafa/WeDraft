@@ -53,14 +53,16 @@ Cron 每 5 分钟检查实际 `/release.json` 可达性和数据库心跳；连�
 
 1. 按仓库规则审阅 PR、批准精确 head，合入干净 main 后生成不可变候选。
 2. 在 Workers Free 账户创建独立 `wedraft-monitoring` D1；不要使用其他产品数据库。建表命令只指向这个库。保持已有网站生产配置直到候选获准发布。
-3. Zero Trust 选择 Free；为 `wedraft.xiaoha.org/monitor` 及所有子路径配置一个 self-hosted Access 应用，只允许管理员单一邮箱，禁止 Everyone/bypass。不要把 Access 套到整个网站。保留 `/api/telemetry/events` 为公共的同源白名单入口。
+3. 若开通 Access：Zero Trust 选择 Free；为 `wedraft.xiaoha.org/monitor` 及所有子路径配置一个 self-hosted Access 应用，只允许管理员单一邮箱，禁止 Everyone/bypass。不要把 Access 套到整个网站。保留 `/api/telemetry/events` 为公共的同源白名单入口。若不接受账户开通条件，可先在本机配置显式设置 `dashboardMode: "disabled"`，删除或清空 `accessIssuer`、`accessAud`，仅上线采集与定时维护；所有看板页面和 API 继续返回 403，没有公开入口或备用密码。省略该选项时仍强制要求完整 Access 配置，不会因漏配自动关闭看板。
 4. 管理员邮箱、account/database ID、Access team issuer/audience 存在忽略的 `artifacts/monitoring/setup.json`；不能提交到公开仓库。
-5. 邮件只发到同一已验证收件人，绑定固定 `destination_address`。发件域需已有 Email Routing 配置。不要为监控擅自替换网站域名的 MX、启用付费任意收件人通道；未就绪时保留告警状态但不发送。
-6. `WEDRAFT_MONITOR_CONFIG=/绝对路径/setup.json node scripts/prepare-web-release.mjs` 将 Worker、迁移和配置封装到同一个版本目录，沿用 SHA256、源码包、部署包与回退记录。缺少已验证免费套餐标记、D1、Access 或邮箱时拒绝生成监控配置。普通不带配置的命令仍生成静态候选。
-7. 对具体候选与影响范围取得生产批准，再使用该目录配置迁移 D1 并部署。验证匿名看板 403/Access 登录、允许邮箱可见、拒绝其他邮箱、真实浏览器同意/撤回、粘贴与工具栏路径、重复事件不增计数、故障和恢复告警。不能把本地模拟当线上验收。
+5. 邮件只发到同一已验证收件人，绑定固定 `destination_address`。发件域需已有 Email Routing 配置。不要为监控擅自替换网站域名的 MX、启用付费任意收件人通道；未就绪时保留告警状态但不发送。只有 `emailVerified: true` 且提供 `alertFrom` 才生成邮件绑定；否则发件人保持空值，不需要为部署开通邮件服务。
+6. `WEDRAFT_MONITOR_CONFIG=/绝对路径/setup.json node scripts/prepare-web-release.mjs` 将 Worker、迁移和配置封装到同一个版本目录，沿用 SHA256、源码包、部署包与回退记录。缺少已验证免费套餐标记、D1、管理员邮箱或所选模式的必要配置时拒绝生成。普通不带配置的命令仍生成静态候选。
+7. 对具体候选与影响范围取得生产批准，再使用该目录配置迁移 D1 并部署。验证真实浏览器同意/撤回、粘贴与工具栏路径、重复事件不增计数。Access 模式验证匿名登录、允许邮箱可见和拒绝其他邮箱；关闭模式验证所有看板页面/API 均返回 403。邮件配置完成后才验收故障与恢复通知；未配置时验证告警状态但不得宣称邮件可用。不能把本地模拟当线上验收。
 8. 回退使用上一个保留的静态网站候选，并移除本期 Cron；数据仍保留，不随代码回退删除。立即停采可把 `ENABLED` 改为 `false`。若静态回退，网页无采集代码，数据库无需破坏性回滚。
 
 首次开通 Access Free 可能出现服务条款与超额扣款授权；这不是代码可以绕过的步骤，必须由账户所有者决定，不能从“先免费使用”推定同意自动扣款。
+
+`dashboardMode: "disabled"` 是分阶段部署：不购买或开通 Zero Trust，用户同意后的统计仍写入独立 D1；线上无法查看私有看板，邮件未配置时也没有邮件告警。运维人员可在既有 Cloudflare 账户权限下查看该 D1，不能把本机测试看板当作线上数据。后续启用看板需要另行配置 Access 和部署，关闭模式不会自动开通服务或升级套餐。
 
 配置文件内的邮箱只用于 Worker 环境和受保护的监控服务，不出现在静态网站产物。发布包属于本机私有运维资产，不上传公共仓库。
 
