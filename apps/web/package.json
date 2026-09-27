@@ -1,6 +1,6 @@
 {
   "name": "@wedraft/web",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@wedraft/telemetry": "workspace:*",
     "@wedraft/core": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

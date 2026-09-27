@@ -548,3 +548,9 @@
 .template-contribution-card:hover .contribution-preview { color: var(--accent); background: #eaf0e5; }
 .contribution-caption { margin: 13px 0 0; color: #737e6b; font-size: var(--ui-text-caption); line-height: 1.6; }
 .contribution-caption svg { display: inline; vertical-align: middle; }
+
+.web-status-links { display:flex; flex-wrap:wrap; gap: 12px; }
+.statistics-control { align-self: flex-start; padding: 12px 20px; font-size: 12px; }
+.statistics-choice { position: fixed; left: 16px; bottom: 64px; z-index: 80; width: min(440px, calc(100vw - 32px)); padding: 20px; border: 1px solid #d5ddd9; border-radius: 14px; background: #fff; box-shadow: 0 8px 30px #14332622; font-size: 14px; line-height: 1.7; }
+.statistics-choice p { margin: 0 0 12px; }
+.statistics-choice > div { display: flex; flex-wrap: wrap; gap: 12px; }

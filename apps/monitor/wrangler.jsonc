@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "wedraft-monitor-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "send_metrics": false,
+  "assets": {"directory": "../web/dist", "binding": "ASSETS", "run_worker_first": ["/api/telemetry/*", "/monitor", "/monitor/*"], "not_found_handling":"none"},
+  "d1_databases": [{"binding":"DB","database_name":"wedraft-monitoring-local","migrations_dir":"migrations"}],
+  "ratelimits": [{"name":"INGEST_LIMIT","namespace_id":"27092026","simple":{"limit":30,"period":60}}],
+  "send_email": [{"name":"ALERT_EMAIL"}],
+  "vars": {"ENVIRONMENT":"local","COLLECT_ORIGIN":"http://127.0.0.1:8787","ENABLED":"true","ACCESS_ISSUER":"","ACCESS_AUD":"","ADMIN_EMAILS":"","ALERT_FROM":"","ALERT_TO":""},
+  "triggers": {"crons":["*/5 * * * *"]},
+  "observability": {"enabled":false}
+}

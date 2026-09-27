@@ -20,6 +20,9 @@ release/
 /.worktrees/
 /.codex/
 /.agents/
+.wrangler/
+.dev.vars
+.dev.vars.*
 
 # Private app data, exports and signing credentials
 *.sqlite

@@ -28,7 +28,8 @@
     "playwright": "1.58.2",
     "tsx": "4.23.1",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.141.0"
   },
   "engines": {
     "node": ">=22.12.0"

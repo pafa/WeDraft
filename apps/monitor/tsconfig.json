@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.base.json","compilerOptions":{"module":"ESNext","moduleResolution":"Bundler","lib":["ES2023"],"types":["node"]},"include":["src/**/*.ts","tests/**/*.ts","worker-configuration.d.ts"]}
