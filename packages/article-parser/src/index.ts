@@ -379,7 +379,10 @@ function blockHasContent(block: ArticleBlock): boolean {
   return inlineText(block.children).trim().length > 0;
 }
 
-const BOLD_BOUNDARY = "<!--wedraft-bold-boundary-->";
+// Unlike a comment, this inline tag cannot start an HTML block when inserted
+// before bold text at the beginning of a paragraph, quote, or list item.
+// inlineFromNodes discards it after parsing, so it never changes visible text.
+const BOLD_BOUNDARY = "<wbr>";
 const MARKDOWN_PUNCTUATION = /[\p{P}\p{S}]/u;
 
 function isEscapedAt(source: string, index: number): boolean {

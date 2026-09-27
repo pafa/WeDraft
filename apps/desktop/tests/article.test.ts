@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hasBlockingIssues } from "@wedraft/validation";
+import { documentPlainText } from "@wedraft/article-model";
 
 import {
   buildArticle,
@@ -7,6 +8,20 @@ import {
 } from "../src/services/article.js";
 
 describe("desktop article pipeline", () => {
+  it("段首粗体紧贴正文时预览和复制内容完整，保留原文定位", () => {
+    const result = buildArticle({
+      markdown: "标题\n\n**一段重点。**后面紧接正文。\n\n---\n\n## 第一章\n\n后续正文。",
+      author: "", digest: "", sourceUrl: "",
+    });
+    expect(result.document.blocks).toHaveLength(4);
+    expect(result.html).toContain(">一段重点。</strong>后面紧接正文。");
+    expect(documentPlainText(result.document)).toContain("一段重点。后面紧接正文。");
+    expect(result.sourceMap[1]).toEqual({ blockIndex: 0, startLine: 3, endLine: 3 });
+    expect(result.html).not.toContain("wedraft-bold-boundary");
+    expect(result.html).not.toContain("<wbr");
+    expect(hasBlockingIssues(result.issues)).toBe(false);
+  });
+
   it("解析并渲染实时预览", () => {
     const result = buildArticle({
       markdown: "标题\n\n## 章节\n\n正文 **重点**",

@@ -90,6 +90,45 @@ describe("parseArticle", () => {
     });
   });
 
+  it.each(["", " ", "  ", "   "])("%j 缩进的段首粗体不吞掉整段或后续行", (indent) => {
+    const result = parseArticleWithSourceMap(
+      `# 标题\n\n${indent}**重点以句号结束。**后面紧接正文。\n同一段的下一行。\n\n## 第一章\n\n后续正文。`,
+    );
+    expect(result.document.blocks).toMatchObject([
+      {
+        type: "paragraph",
+        children: [
+          { text: "重点以句号结束。", bold: true },
+          { text: "后面紧接正文。\n同一段的下一行。" },
+        ],
+      },
+      { type: "heading", children: [{ text: "第一章" }] },
+      { type: "paragraph", children: [{ text: "后续正文。" }] },
+    ]);
+    expect(result.sourceMap).toEqual([
+      { blockIndex: -1, startLine: 1, endLine: 1 },
+      { blockIndex: 0, startLine: 3, endLine: 4 },
+      { blockIndex: 1, startLine: 6, endLine: 6 },
+      { blockIndex: 2, startLine: 8, endLine: 8 },
+    ]);
+  });
+
+  it.each([
+    ["> ", "quote"],
+    ["- ", "list"],
+    ["1. ", "list"],
+    ["## ", "heading"],
+  ])("%s 开头的粗体保留所属块及完整文字", (prefix, type) => {
+    const result = parseArticle(`# 标题\n\n${prefix}**“重点”**紧接正文。`);
+    const children = [
+      { text: "“重点”", bold: true },
+      { text: "紧接正文。" },
+    ];
+    expect(result.blocks).toMatchObject([
+      type === "list" ? { type, items: [children] } : { type, children },
+    ]);
+  });
+
   it("不把转义星号和行内代码误判为粗体", () => {
     const result = parseArticle(
       "# 标题\n\n原样\\*\\*18%\\*\\*继续，代码 `增长**18%**继续`。",
