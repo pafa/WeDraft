@@ -169,6 +169,11 @@ function formatImageBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KiB`;
 }
 
+export type EditorInteraction =
+  | { kind: "input"; method: "typing" | "paste_plain" | "paste_html" }
+  | { kind: "format"; action: MarkdownShortcut | "undo" | "redo"; source: "toolbar" | "keyboard"; changed: boolean }
+  | { kind: "image" | "rules"; result: "success" | "failed" };
+
 export function ArticleEditor({
   demoActive,
   demoMarkdown,
@@ -181,6 +186,7 @@ export function ArticleEditor({
   onActiveBlockChange,
   onImagePreviewReady,
   prepareImage,
+  onInteraction,
   compactHeader = false,
   copyPlainText = (text: string) => navigator.clipboard.writeText(text),
   persistenceHint = "复制后进入文章历史",
@@ -201,6 +207,7 @@ export function ArticleEditor({
   onImagePreviewReady: (localPath: string, dataUrl: string) => void;
   prepareImage: (file: File) => Promise<{ url: string; dataUrl: string; notice: string; warning?: boolean }>;
   copyPlainText?: (text: string) => Promise<void>;
+  onInteraction?: (event: EditorInteraction) => void;
   compactHeader?: boolean;
   persistenceHint?: string;
   imageProcessingHint?: string;
@@ -501,11 +508,13 @@ export function ArticleEditor({
     });
   };
 
+  const plainPastePending=useRef(false);
   const onPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
     const html = event.clipboardData.getData("text/html");
-    if (!html) return;
+    if (!html) { plainPastePending.current=true; setTimeout(()=>{plainPastePending.current=false;},0); return; }
     event.preventDefault();
     insertAtCursor(htmlToMarkdown(html));
+    onInteraction?.({kind:"input",method:"paste_html"});
   };
 
   const chooseBodyImage = (event: ChangeEvent<HTMLInputElement>) => {
@@ -532,10 +541,12 @@ export function ArticleEditor({
       }
       onImagePreviewReady(image.url, image.dataUrl);
       insertAtCursor(buildBodyImageMarkdown(file.name, image.url, source));
+      onInteraction?.({kind:"image",result:"success"});
       setImageNotice({ message: image.notice, warning: image.warning ?? false });
       setPendingImage(null);
       setImageSource("");
     } catch (caught) {
+      onInteraction?.({kind:"image",result:"failed"});
       setImageError(
         caught instanceof Error ? caught.message : "正文图片处理失败。",
       );
@@ -549,14 +560,16 @@ export function ArticleEditor({
     try {
       await copyPlainText(MARKDOWN_RULES_PROMPT);
       setRulesCopied(true);
+      onInteraction?.({kind:"rules",result:"success"});
     } catch (caught) {
+      onInteraction?.({kind:"rules",result:"failed"});
       setRulesError(
         caught instanceof Error ? caught.message : "Markdown 规则复制失败。",
       );
     }
   };
 
-  const useMarkdownShortcut = (shortcut: MarkdownShortcut) => {
+  const useMarkdownShortcut = (shortcut: MarkdownShortcut, source: "toolbar" | "keyboard" = "toolbar") => {
     const textarea = textareaRef.current;
     if (!textarea || demoActive) return;
     const result = applyMarkdownShortcut(
@@ -566,6 +579,7 @@ export function ArticleEditor({
       shortcut,
     );
     setMarkdown(result.markdown, "checkpoint");
+    onInteraction?.({kind:"format",action:shortcut,source,changed:result.markdown!==markdown});
     requestAnimationFrame(() => {
       textarea.focus();
       textarea.setSelectionRange(
@@ -579,12 +593,13 @@ export function ArticleEditor({
     });
   };
 
-  const useHistoryAction = (action: "undo" | "redo") => {
+  const useHistoryAction = (action: "undo" | "redo", source: "toolbar" | "keyboard" = "toolbar") => {
     if (demoActive) return;
     const textarea = textareaRef.current;
     const caret = textarea?.selectionStart ?? selection.start;
     if (action === "undo") undoMarkdown();
     else redoMarkdown();
+    onInteraction?.({kind:"format",action,source,changed:useEditorStore.getState().markdown!==markdown});
     requestAnimationFrame(() => {
       const nextLength = useEditorStore.getState().markdown.length;
       const nextCaret = Math.min(caret, nextLength);
@@ -598,12 +613,12 @@ export function ArticleEditor({
     if (!event.metaKey) return;
     if (!event.altKey && event.code === "KeyZ") {
       event.preventDefault();
-      useHistoryAction(event.shiftKey ? "redo" : "undo");
+      useHistoryAction(event.shiftKey ? "redo" : "undo", "keyboard");
       return;
     }
     if (!event.altKey && !event.shiftKey && event.code === "KeyY") {
       event.preventDefault();
-      useHistoryAction("redo");
+      useHistoryAction("redo", "keyboard");
       return;
     }
     let shortcut: MarkdownShortcut | null = null;
@@ -634,7 +649,7 @@ export function ArticleEditor({
     }
     if (!shortcut) return;
     event.preventDefault();
-    useMarkdownShortcut(shortcut);
+    useMarkdownShortcut(shortcut, "keyboard");
   };
 
   return (
@@ -821,7 +836,8 @@ export function ArticleEditor({
               end: event.currentTarget.selectionEnd,
             })
           }
-          onChange={(event) => setMarkdown(event.target.value, "typing")}
+          onChange={(event) => { setMarkdown(event.target.value, "typing"); const input=event.nativeEvent as InputEvent; if(!input.isComposing) onInteraction?.({kind:"input",method:(plainPastePending.current || input.inputType==="insertFromPaste")?"paste_plain":"typing"}); }}
+          onCompositionEnd={() => onInteraction?.({kind:"input",method:"typing"})}
           onScroll={onEditorScroll}
         />
         <div

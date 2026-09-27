@@ -1,5 +1,12 @@
 # WeDraft 版本记录
 
+## Web / AI 0.2.0 — 2026-09-27（候选）
+
+- 增加默认关闭的网页操作与内容特征统计；用户主动允许，可随时撤回，不采集文章原文。
+- 增加 Cloudflare 免费 Worker + D1 采集、Access 私有看板、限流与存储保护、保留期清理及可配置的免费邮箱告警。
+- 区分键入、粘贴、导入、工具栏/快捷键、预览编辑，以及复制成功和浏览器导出交接。
+- 本地 MCP 与 Mac 不新增远程统计；本期无公开 Mac 下载指标。
+
 Web / AI 与 Mac 分别记录版本。公开测试版的具体部署以源提交区分，线上来源可查 [`release.json`](https://wedraft.xiaoha.org/release.json)。历史记录不追溯创建 Git 标签或软件 Release。
 
 ## [Unreleased]
