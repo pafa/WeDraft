@@ -1,3 +1,5 @@
+![WeDraft 小哈公众号排版工具：MIT 开源、七款模板、AI 排版、一键复制](docs/images/readme-banner.png)
+
 <p align="center">
   <img src="apps/desktop/src-tauri/icons/128x128@2x.png" width="88" height="88" alt="WeDraft 应用图标">
 </p>
